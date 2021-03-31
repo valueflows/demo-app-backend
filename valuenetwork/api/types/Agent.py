@@ -265,7 +265,8 @@ class Agent(graphene.Interface):
                 events = agent.involved_in_events().filter(event_date__year=year).filter(event_date__month=month)
             else:
                 events = agent.involved_in_events()
-            events = events.exclude(event_type__name="Give").exclude(event_type__name="Receive")
+            #events = events.exclude(event_type__name="Give").exclude(event_type__name="Receive")
+            events = events.exclude(event_type__name="Give")
             if action != None:
                 events = events.filter(event_type=EventType.objects.convert_action_to_event_type(action))
             if request_distribution != None:

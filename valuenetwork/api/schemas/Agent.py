@@ -191,7 +191,7 @@ class Query(graphene.AbstractType):
             agent = agent,
             user = user)
         au.save()
-        return "User " + username + " created, Agent and AgentUser created."
+        return formatAgent(agent) # "User " + username + " created, Agent and AgentUser created."
 
 
 

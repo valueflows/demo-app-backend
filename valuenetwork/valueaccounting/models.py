@@ -603,8 +603,9 @@ class EconomicAgent(models.Model):
                 context_agent = object_to_mutate.context_agent
         else:
             return False
-        if context_agent not in self.is_member_of():
-            return False
+        if context_agent:  #LF: added to get this to work for LD, don't know actual source of their problem
+            if context_agent not in self.is_member_of():
+                return False
         if object_to_mutate: 
             if object_to_mutate.pk: #update or delete
                 if type(object_to_mutate) is EconomicEvent:

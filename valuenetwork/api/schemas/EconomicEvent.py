@@ -1,16 +1,17 @@
 #
 # Graphene schema for exposing EconomicEvent
 #
-
+"""
 import graphene
 import datetime
 from decimal import Decimal
-from valuenetwork.valueaccounting.models import EconomicEvent as EconomicEventProxy, Commitment, EventType, EconomicAgent, Process, EconomicResourceType, EconomicResource as EconomicResourceProxy, Unit, AgentUser, Location, AgentResourceRoleType, AgentResourceRole
-from valuenetwork.api.types.EconomicEvent import EconomicEvent, Action
-from valuenetwork.api.models import Fulfillment
-from six import with_metaclass
-from django.contrib.auth.models import User
-from .Auth import AuthedInputMeta, AuthedMutation
+#from vocab.models import EconomicEvent as EconomicEventProxy, Commitment, EventType, EconomicAgent, Process, EconomicResourceType, EconomicResource as EconomicResourceProxy, Unit, AgentUser, Location, AgentResourceRoleType, AgentResourceRole
+from vocab.models import EconomicEvent as EconomicEventProxy, Action as ActionProxy, Agent, Process, EconomicResource as EconomicResourceProxy, Unit
+from api.types.EconomicEvent import EconomicEvent, Action
+#from valuenetwork.api.models import Fulfillment
+#from six import with_metaclass
+#from django.contrib.auth.models import User
+#from .Auth import AuthedInputMeta, AuthedMutation
 from django.core.exceptions import PermissionDenied, ValidationError
 
 
@@ -19,15 +20,15 @@ class Query(graphene.AbstractType):
     economic_event = graphene.Field(EconomicEvent,
                                     id=graphene.Int())
 
-    all_economic_events = graphene.List(EconomicEvent)
+    economic_events = graphene.List(EconomicEvent)
     
-    filtered_economic_events = graphene.List(EconomicEvent,
-                                             provider_id=graphene.Int(),
-                                             receiver_id=graphene.Int(),
-                                             resource_classified_as_id=graphene.Int(),
-                                             action=graphene.String(),
-                                             start_date=graphene.String(),
-                                             end_date=graphene.String())
+    #filtered_economic_events = graphene.List(EconomicEvent,
+    #                                         provider_id=graphene.Int(),
+    #                                         receiver_id=graphene.Int(),
+    #                                         resource_classified_as_id=graphene.Int(),
+    #                                         action=graphene.String(),
+    #                                         start_date=graphene.String(),
+    #                                         end_date=graphene.String())
 
     def resolve_economic_event(self, args, *rargs):
         id = args.get('id')
@@ -37,7 +38,7 @@ class Query(graphene.AbstractType):
                 return event
         return None
 
-    def resolve_all_economic_events(self, args, context, info):
+    def resolve_economic_events(self, args, context, info):
         return EconomicEventProxy.objects.all()
 
     def resolve_filtered_economic_events(self, args, context, info):
@@ -61,8 +62,8 @@ class Query(graphene.AbstractType):
         if end_date:
             events = events.filter(event_date__lte=end_date)
         return events
-
-
+    """
+"""
 class CreateEconomicEvent(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):
         action = graphene.String(required=False) #but then must have a commitment
@@ -352,3 +353,4 @@ class DeleteEconomicEvent(AuthedMutation):
                 raise PermissionDenied('User not authorized to perform this action.')
 
         return DeleteEconomicEvent(economic_event=economic_event)
+"""

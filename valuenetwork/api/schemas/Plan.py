@@ -4,7 +4,7 @@
 
 import graphene
 import datetime
-from valuenetwork.valueaccounting.models import Order, EconomicAgent, AgentUser, EconomicResourceType
+from valuenetwork.valueaccounting.models import VocabPlan, VocabAgent #, ResourceSpecification #, AgentUser
 from valuenetwork.api.types.Plan import Plan
 from six import with_metaclass
 from django.contrib.auth.models import User
@@ -17,28 +17,28 @@ class Query(graphene.AbstractType):
     plan = graphene.Field(Plan,
                           id=graphene.Int())
 
-    all_plans = graphene.List(Plan)
+    plans = graphene.List(Plan)
 
     # load single item
 
     def resolve_plan(self, args, *rargs):
         id = args.get('id')
         if id is not None:
-            plan = Order.objects.get(pk=id)
+            plan = VocabPlan.objects.get(pk=id)
             if plan:
                 return plan
         return None
 
     # load all items
 
-    def resolve_all_plans(self, args, context, info):
-        return Order.objects.rand_orders()
+    def resolve_plans(self, args, context, info):
+        return VocabPlan.objects.all()
 
 
 class CreatePlan(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):
         name = graphene.String(required=True)
-        due = graphene.String(required=True)
+        due = graphene.String(required=False)
         note = graphene.String(required=False)
 
     plan = graphene.Field(lambda: Plan)
@@ -52,23 +52,22 @@ class CreatePlan(AuthedMutation):
         if not note:
             note = ""
         due = datetime.datetime.strptime(due, '%Y-%m-%d').date()
-        plan = Order(
-            order_type="rand",
+        plan = VocabPlan(
             name=name,
-            due_date=due,
-            description=note,
-            created_by=context.user,
+            due=due,
+            note=note,
+            #created_by=context.user,
         )
 
-        user_agent = AgentUser.objects.get(user=context.user).agent
-        is_authorized = user_agent.is_authorized(object_to_mutate=plan)
-        if is_authorized:
-            plan.save()
-        else:
-            raise PermissionDenied('User not authorized to perform this action.')
+        #user_agent = AgentUser.objects.get(user=context.user).agent
+        #is_authorized = user_agent.is_authorized(object_to_mutate=plan)
+        #if is_authorized:
+        plan.save()
+        #else:
+        #    raise PermissionDenied('User not authorized to perform this action.')
 
         return CreatePlan(plan=plan)
-
+"""
 
 class CreatePlanFromRecipe(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):
@@ -160,3 +159,4 @@ class DeletePlan(AuthedMutation):
                 raise PermissionDenied('Plan has related events, cannot be deleted.')
 
         return DeletePlan(plan=plan)
+"""

@@ -15,6 +15,12 @@ admin.site.register(Location)
 admin.site.register(UseCaseEventType)
 admin.site.register(HomePageLayout)
 
+admin.site.register(VocabAgent)
+admin.site.register(VocabAgentRelationshipRole)
+admin.site.register(VocabAgentRelationship)
+admin.site.register(VocabPlan)
+admin.site.register(VocabProcess)
+
 
 class HelpAdmin(admin.ModelAdmin):
     list_display = ('page',)

@@ -1,1064 +1,292 @@
-from django.test import TestCase
-from django.contrib.auth.models import User
-from valuenetwork.valueaccounting.models import *
-from pinax.notifications.models import NoticeSetting, NoticeType
-from valuenetwork.api.models import *
-from .schema import schema
-import datetime
-
-import logging
-logger = logging.getLogger("graphql.execution.executor").addHandler(logging.NullHandler())
-# Note: if you want to see the executor error messages,
-# comment out the line above and uncomment the one below:
-#logging.basicConfig()
-
-class APITest(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        import os
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'valuenetwork.settings'
-        super(APITest, cls).setUpClass()
-        import django
-        django.setup()
-
-    def setUp(self):
-        # agent data
-        at_person = AgentType.objects.get(name="Individual")
-        at_org = AgentType.objects.get(name="Organization")
-        aat_member = AgentAssociationType.objects.get(identifier="member")
-        aat_supplier = AgentAssociationType.objects.get(identifier="supplier")
-        test_user, _ = User.objects.get_or_create(username='testUser11222')
-        test_user.set_password('123456')
-        test_user.save()
-        test_agent, _ = EconomicAgent.objects.get_or_create(nick='testUser11222', agent_type=at_person)
-        test_agent.name = 'testUser11222'
-        if test_user not in test_agent.users.all():
-            from valuenetwork.valueaccounting.models import AgentUser
-            agent_user, _ = AgentUser.objects.get_or_create(agent=test_agent, user=test_user)
-            test_agent.users.add(agent_user)
-        test_agent.save()
-        notice_type = NoticeType(
-            label="api_test",
-            display="api test",
-            default=0,
-            )
-        notice_type.save()
-        notice_set = NoticeSetting(
-            notice_type=notice_type,
-            send=True,
-            user=test_user,
-            )
-        notice_set.save()
-        org1 = EconomicAgent(
-            name="org1",
-            nick="org1",
-            agent_type=at_org,
-            )
-        org1.save()
-        org2 = EconomicAgent(
-            name="org2",
-            nick="org2",
-            agent_type=at_org,
-            )
-        org2.save()
-        another_person = EconomicAgent(
-            name="not user",
-            nick="not user",
-            agent_type=at_person,
-            )
-        another_person.save()
-        supplier = EconomicAgent(
-            name="supp1",
-            nick="supp1",
-            agent_type=at_org,
-            )
-        supplier.save()
-        test_agent_org1 = AgentAssociation(
-            is_associate=test_agent,
-            has_associate=org1,
-            association_type=aat_member,
-            )
-        test_agent_org1.save()
-        another_person_org1 = AgentAssociation(
-            is_associate=another_person,
-            has_associate=org1,
-            association_type=aat_member,
-            )
-        another_person_org1.save()
-        test_agent_org2 = AgentAssociation(
-            is_associate=test_agent,
-            has_associate=org2,
-            association_type=aat_member,
-            )
-        test_agent_org2.save()
-        supplier_org1 = AgentAssociation(
-            is_associate=supplier,
-            has_associate=org1,
-            association_type=aat_supplier,
-            )
-        supplier_org1.save()
-
-        # resource data
-        unit_each = Unit(
-            unit_type = "quantity",
-            abbrev = "EA",
-            name = "Each",
-            )
-        unit_each.save()
-        unit_hours = Unit(
-            unit_type = "time",
-            abbrev = "HR",
-            name = "Hours",
-            )
-        unit_hours.save()
-        rti1 = EconomicResourceType(
-            name='component1',
-            unit=unit_each,
-            behavior="consumed",
-            inventory_rule="yes",
-            )
-        rti1.save()
-        rti3 = EconomicResourceType(
-            name='product1',
-            unit=unit_each,
-            behavior="produced",
-            inventory_rule="yes",
-            )
-        rti3.save()
-        rti2 = EconomicResourceType(
-            name='work1',
-            unit=unit_hours,
-            behavior="work",
-            inventory_rule="never",
-            )
-        rti2.save()
-        res1 = EconomicResource(
-            resource_type=rti1,
-            identifier="a-component",
-            quantity=5,
-            )
-        res1.save()
-        res2 = EconomicResource(
-            resource_type=rti1,
-            identifier="another-component",
-            quantity=100,
-            )
-        res2.save()
-        res3 = EconomicResource(
-            resource_type=rti3,
-            identifier="a-product",
-            quantity=20,
-            )
-        res3.save()
-        arr1 = AgentResourceRoleType(
-            name="owner",
-            is_owner=True,
-            )
-        arr1.save()
-        arr2 = AgentResourceRoleType(
-            name="custodian",
-            is_owner=False,
-            )
-        arr2.save()
-        a1r3 = AgentResourceRole(
-            agent=org1,
-            resource=res3,
-            role=arr1,
-            )
-        a1r3.save()
-        a1r2 = AgentResourceRole(
-            agent=org1,
-            resource=res2,
-            role=arr1,
-            )
-        a1r2.save()
-        a1r1 = AgentResourceRole(
-            agent=org1,
-            resource=res1,
-            role=arr2,
-            )
-        a1r1.save()
-
-        # order-process-commitment-event data
-
-        pt1 = ProcessType(
-            name="pt1",
-            context_agent=org1,
-            estimated_duration=300,
-            )
-        pt1.save()
-        proc1 = Process(
-            name="proc1",
-            start_date=datetime.date.today(),
-            end_date=datetime.date.today() + datetime.timedelta(days=5),
-            finished=False,
-            context_agent=org1,
-            process_type=pt1,
-            )
-        proc1.save()
-        proc2 = Process(
-            name="proc2",
-            start_date=datetime.date.today() - datetime.timedelta(days=5),
-            end_date=datetime.date.today() - datetime.timedelta(days=2),
-            finished=True,
-            context_agent=org1,
-            )
-        proc2.save()
-        proc3 = Process(
-            name="proc3",
-            start_date=datetime.date.today() + datetime.timedelta(days=10),
-            end_date=datetime.date.today() + datetime.timedelta(days=15),
-            finished=False,
-            context_agent=org2,
-            )
-        proc3.save()
-        order1 = Order(
-            name="order1",
-            due_date=proc3.end_date,
-            order_date=proc1.start_date,
-            provider=org1,
-            order_type="rand",
-            )
-        order1.save()
-        proc1.plan = order1
-        proc1.save()
-        proc2.plan = order1
-        proc2.save()
-        proc3.plan = order1
-        proc3.save()
-        et_cite = EventType.objects.get(name="Citation")
-        et_produce = EventType.objects.get(name="Resource Production")
-        et_todo = EventType.objects.get(name="Todo")
-        et_use = EventType.objects.get(name="Resource use")
-        et_work = EventType.objects.get(name="Time Contribution")
-        et_tobechanged = EventType.objects.get(name="To Be Changed")
-        et_change = EventType.objects.get(name="Change")
-        et_consume = EventType.objects.get(name="Resource Consumption")
-        proc1_c1 = Commitment(
-            event_type=et_work,
-            due_date=datetime.date.today() + datetime.timedelta(days=10),
-            from_agent=test_agent,
-            resource_type=rti2,
-            process=proc1,
-            context_agent=org1,
-            quantity=3,
-            unit_of_quantity=unit_hours,
-            independent_demand=order1,
-            )
-        proc1_c1.save()
-        proc1_c2 = Commitment(
-            event_type=et_work,
-            due_date=datetime.date.today() + datetime.timedelta(days=10),
-            from_agent=another_person,
-            resource_type=rti2,
-            process=proc1,
-            context_agent=org1,
-            quantity=2.5,
-            unit_of_quantity=unit_hours,
-            independent_demand=order1,
-            )
-        proc1_c2.save()
-        proc1_c3 = Commitment(
-            event_type=et_consume,
-            due_date=datetime.date.today() + datetime.timedelta(days=10),
-            #from_agent=another_person,
-            resource_type=rti1,
-            process=proc1,
-            context_agent=org1,
-            quantity=3,
-            unit_of_quantity=unit_each,
-            independent_demand=order1,
-            )
-        proc1_c3.save()
-        proc1_c4 = Commitment(
-            event_type=et_produce,
-            due_date=datetime.date.today() + datetime.timedelta(days=10),
-            #from_agent=another_person,
-            resource_type=rti3,
-            process=proc1,
-            context_agent=org1,
-            quantity=1,
-            unit_of_quantity=unit_each,
-            independent_demand=order1,
-            )
-        proc1_c4.save()
-        proc1_e1 = EconomicEvent(
-            event_type=et_work,
-            event_date=datetime.date.today(),
-            from_agent=test_agent,
-            resource_type=rti2,
-            process=proc1,
-            context_agent=org1,
-            quantity=Decimal(1),
-            unit_of_quantity=unit_hours,
-            commitment=proc1_c1,
-            )
-        proc1_e1.save()
-        proc1_e2 = EconomicEvent(
-            event_type=et_work,
-            event_date=datetime.date.today() + datetime.timedelta(days=1),
-            from_agent=test_agent,
-            resource_type=rti2,
-            process=proc1,
-            context_agent=org1,
-            quantity=Decimal(1.5),
-            unit_of_quantity=unit_hours,
-            commitment=proc1_c1,
-            )
-        proc1_e2.save()
-        proc1_e3 = EconomicEvent(
-            event_type=et_work,
-            event_date=datetime.date.today() + datetime.timedelta(days=1),
-            from_agent=another_person,
-            resource_type=rti2,
-            process=proc1,
-            context_agent=org1,
-            quantity=Decimal(3),
-            unit_of_quantity=unit_hours,
-            commitment=proc1_c2,
-            )
-        proc1_e3.save()
-        proc1_e4 = EconomicEvent(
-            event_type=et_consume,
-            event_date=datetime.date.today(),
-            #from_agent=another_person,
-            resource_type=rti1,
-            resource=res1,
-            process=proc1,
-            context_agent=org1,
-            quantity=Decimal(3),
-            unit_of_quantity=unit_each,
-            commitment=proc1_c3,
-            )
-        proc1_e4.save()
-        proc1_e5 = EconomicEvent(
-            event_type=et_produce,
-            event_date=datetime.date.today() + datetime.timedelta(days=3),
-            from_agent=org1,
-            resource_type=rti3,
-            resource=res3,
-            process=proc1,
-            context_agent=org1,
-            quantity=Decimal(1),
-            unit_of_quantity=unit_each,
-            commitment=proc1_c4,
-            )
-        proc1_e5.save()
-        proc1_e6 = EconomicEvent(
-            event_type=et_produce,
-            event_date=datetime.date.today() + datetime.timedelta(days=3),
-            from_agent=org1,
-            resource_type=rti1,
-            resource=res2,
-            process=proc1,
-            context_agent=org1,
-            quantity=Decimal(2),
-            unit_of_quantity=unit_each,
-            commitment=None,
-            )
-        proc1_e6.save()
-        proc2_e1 = EconomicEvent(
-            event_type=et_produce,
-            event_date=datetime.date.today() - datetime.timedelta(days=5),
-            from_agent=org1,
-            resource_type=rti1,
-            resource=res1,
-            process=proc2,
-            context_agent=org1,
-            quantity=Decimal(20),
-            unit_of_quantity=unit_each,
-            commitment=None,
-            )
-        proc2_e1.save()
-        proc3_e1 = EconomicEvent(
-            event_type=et_consume,
-            event_date=datetime.date.today() + datetime.timedelta(days=10),
-            from_agent=org1,
-            resource_type=rti3,
-            resource=res3,
-            process=proc3,
-            context_agent=org2,
-            quantity=Decimal(1),
-            unit_of_quantity=unit_each,
-            commitment=None,
-            )
-        proc3_e1.save()
-
-    def test_basic_me_query(self):
-
-        result = schema.execute('''
-        mutation {
-          createToken(username: "testUser11222", password: "123456") {
-            token
-          }
-        }
-        ''')
-        call_result = result.data['createToken']
-        token = call_result['token']
-        query = '''
-        query {
-          viewer(token: "''' + token + '''") {
-            myAgent {
-              name
-            }
-          }
-        }
-        '''
-        result = schema.execute(query)
-        self.assertEqual('testUser11222', result.data['viewer']['myAgent']['name'])
-
-    def test_change_password(self):
-
-        result = schema.execute('''
-                mutation {
-                  createToken(username: "testUser11222", password: "123456") {
-                    token
-                  }
-                }
-                ''')
-        call_result = result.data['createToken']
-        token = call_result['token']
-        user = User.objects.get_by_natural_key('testUser11222')
-        user.set_password('654321')
-        user.save()
-        query = '''
-                query {
-                  viewer(token: "''' + token + '''") {
-                    myAgent {
-                      name
-                    }
-                  }
-                }
-                '''
-        result = schema.execute(query)
-        self.assertEqual(None, result.data['viewer'])
-        self.assertTrue(len(result.errors) == 1)
-        self.assertEqual('Invalid password', str(result.errors[0]))
-
-    def test_agents_and_relationships(self):
-        result = schema.execute('''
-                mutation {
-                  createToken(username: "testUser11222", password: "123456") {
-                    token
-                  }
-                }
-                ''')
-        call_result = result.data['createToken']
-        token = call_result['token']
-        test_agent = EconomicAgent.objects.get(name="testUser11222")
-
-        query = '''
-                query {
-                  viewer(token: "''' + token + '''") {
-                    allAgents {
-                      name
-                      type
-                      __typename
-                      members: agentRelationships(category: MEMBER) {
-                        id
-                        subject {
-                          name
-                          type
-                        }
-                        relationship {
-                          label
-                          category
-                        }
-                        object {
-                          name
-                          type
-                        }
-                      }
-                      tps: agentRelationships(category: TRADINGPARTNER) {
-                        id
-                        subject {
-                          name
-                          type
-                        }
-                        relationship {
-                          label
-                          category
-                        }
-                        object {
-                          name
-                          type
-                        }
-                      }
-                      agentRoles {
-                          label
-                          category
-                      }
-                    }
-                  }
-                }
-                '''
-        result = schema.execute(query)
-        allAgents = result.data['viewer']['allAgents']
-        self.assertEqual(len(allAgents), 5)
-        org1 = allAgents[1]
-        self.assertEqual(org1['name'], 'org1')
-        agentRelationships = org1['tps']
-        supplier = agentRelationships[0]
-        self.assertEqual(supplier['subject']['name'], 'supp1')
-        self.assertEqual(org1['__typename'], 'Organization')
-        self.assertEqual(org1['type'], 'Organization')
-        person = allAgents[0]
-        self.assertEqual(person['__typename'], 'Person')
-        roles = person['agentRoles']
-        role = roles[0]
-        self.assertEqual(role['label'], 'is member of')
-
-    def test_resources_and_resource_types(self):
-        result = schema.execute('''
-                mutation {
-                  createToken(username: "testUser11222", password: "123456") {
-                    token
-                  }
-                }
-                ''')
-        call_result = result.data['createToken']
-        token = call_result['token']
-        test_agent = EconomicAgent.objects.get(name="testUser11222")
-
-        query = '''
-                query {
-                  viewer(token: "''' + token + '''") {
-                    resourceClassificationsByProcessCategory(category: CONSUMED) {
-                      name
-                      category
-                      processCategory
-                      classificationResources {
-                        trackingIdentifier
-                        currentQuantity {
-                          numericValue
-                          unit {
-                            name
-                          }
-                        }
-                        resourceClassifiedAs {
-                          name
-                        }
-                        image
-                        category
-                        note
-                      }
-                    }
-                    resourceClassificationsByAction(action: PRODUCE) {
-                      name
-                      category
-                      processCategory
-                      classificationResources {
-                        trackingIdentifier
-                      }
-                    }
-                  }
-                }
-                '''
-        result = schema.execute(query)
-        #import pdb; pdb.set_trace()
-        resourceClassificationsByProcessCategory = result.data['viewer']['resourceClassificationsByProcessCategory']
-        resourceClassificationsByAction = result.data['viewer']['resourceClassificationsByAction']
-        self.assertEqual(len(resourceClassificationsByProcessCategory), 1)
-        rti1 = resourceClassificationsByProcessCategory[0]
-        self.assertEqual(rti1['name'], 'component1')
-        consumed_resources = rti1['classificationResources']
-        self.assertEqual(len(consumed_resources), 2)
-        conres1 = consumed_resources[0]
-        self.assertEqual(conres1['trackingIdentifier'], 'a-component')
-        prod_resources = resourceClassificationsByAction[1]['classificationResources']
-        prodres1 = prod_resources[0]
-        self.assertEqual(prodres1['trackingIdentifier'], 'a-product')
-
-    def test_agent_other_queries(self):
-        result = schema.execute('''
-                mutation {
-                  createToken(username: "testUser11222", password: "123456") {
-                    token
-                  }
-                }
-                ''')
-        call_result = result.data['createToken']
-        token = call_result['token']
-        test_agent = EconomicAgent.objects.get(name="testUser11222")
-
-        query = '''
-                query {
-                  viewer(token: "''' + token + '''") {
-                    agent(id: 2) {
-                      name
-                      ownedEconomicResources(category: INVENTORY) {
-                        id
-                        resourceClassifiedAs {
-                          name
-                          category
-                          processCategory
-                        }
-                        trackingIdentifier
-                        currentQuantity {
-                          numericValue
-                          unit {
-                            name
-                          }
-                        }
-                        image
-                        note
-                      }
-                      agentProcesses (isFinished: false) {
-                        name
-                        isFinished
-                      }
-                      agentPlans {
-                        name
-                        due
-                        note
-                      }
-                    }
-                  }
-                }
-                '''
-        result = schema.execute(query)
-        agent = result.data['viewer']['agent']
-        ownedEconomicResources = result.data['viewer']['agent']['ownedEconomicResources']
-        processes = result.data['viewer']['agent']['agentProcesses']
-        plans = result.data['viewer']['agent']['agentPlans']
-        self.assertEqual(agent['name'], 'org1')
-        self.assertEqual(ownedEconomicResources[0]['resourceClassifiedAs']['name'], 'product1')
-        self.assertEqual(ownedEconomicResources[0]['resourceClassifiedAs']['processCategory'], 'produced')
-        self.assertEqual(len(ownedEconomicResources), 2)
-        self.assertEqual(ownedEconomicResources[0]['currentQuantity']['unit']['name'], 'Each')
-        self.assertEqual(len(processes), 1)
-        self.assertEqual(processes[0]['name'], 'proc1')
-        self.assertEqual(len(plans), 1)
-        self.assertEqual(plans[0]['name'], 'order1')
-
-    def test_orders_processes_commitments_events(self):
-        result = schema.execute('''
-                mutation {
-                  createToken(username: "testUser11222", password: "123456") {
-                    token
-                  }
-                }
-                ''')
-        call_result = result.data['createToken']
-        token = call_result['token']
-        test_agent = EconomicAgent.objects.get(name="testUser11222")
-
-        query = '''
-                fragment coreEventFields on EconomicEvent {
-                    action
-                    start
-                    affectedQuantity {
-                        numericValue
-                        unit {
-                          name
-                        }
-                    }
-                    affects {
-                        resourceClassifiedAs {
-                          name
-                          category
-                        }
-                        trackingIdentifier
-                    }
-                    provider {
-                        id
-                        name
-                    }
-                    receiver {
-                        id
-                        name
-                    }
-                }
-                fragment coreCommitmentFields on Commitment {
-                    action
-                    plannedStart
-                    committedOn
-                    due
-                    committedQuantity {
-                        numericValue
-                        unit {
-                          name
-                        }
-                    }
-                    resourceClassifiedAs {
-                        name
-                        category
-                    }
-                    provider {
-                        id
-                        name
-                    }
-                    receiver {
-                        id
-                        name
-                    }
-                    involvedAgents {
-                        name
-                    }
-                    plan {
-                        name
-                        plannedOn
-                        due
-                        note
-                        scope {
-                            name
-                        }
-                        workingAgents {
-                            name
-                        }
-                        planProcesses {
-                            name
-                        }
-                    }
-                }
-                query {
-                  viewer(token: "''' + token + '''") {
-                    process(id: 1) {
-                        name
-                        processPlan {
-                          name
-                        }
-                        processClassifiedAs {
-                            name
-                            scope {
-                                name
-                            }
-                            estimatedDuration
-                        }
-                        unplannedEconomicEvents(action: PRODUCE) {
-                            ...coreEventFields
-                        }
-                        inputs {
-                            ...coreEventFields
-                        }
-                        outputs {
-                            ...coreEventFields
-                        }
-                        committedInputs {
-                            ...coreCommitmentFields
-                        }
-                        committedOutputs (action: PRODUCE) {
-                            ...coreCommitmentFields
-                        }
-                        nextProcesses {
-                            name
-                        }
-                        previousProcesses {
-                            name
-                        }
-                        workingAgents {
-                            name
-                            image
-                            __typename
-                        }
-                    }
-                  }
-                }
-                '''
-        result = schema.execute(query)
-        process = result.data['viewer']['process']
-        self.assertEqual(process['name'], 'proc1')
-        unplannedEconomicEvents = process['unplannedEconomicEvents']
-        inputs = process['inputs']
-        outputs = process['outputs']
-        committedInputs = process['committedInputs']
-        committedOutputs = process['committedOutputs']
-        nextProcesses = process['nextProcesses']
-        previousProcesses = process['previousProcesses']
-        workingAgents = process['workingAgents']
-        self.assertEqual(len(unplannedEconomicEvents), 1)
-        self.assertEqual(len(inputs), 4)
-        self.assertEqual(len(outputs), 2)
-        self.assertEqual(len(committedInputs), 3)
-        self.assertEqual(len(committedOutputs), 1)
-        self.assertEqual(len(nextProcesses), 1)
-        self.assertEqual(len(previousProcesses), 1)
-        self.assertEqual(len(workingAgents), 2)
-        self.assertEqual(workingAgents[0]['__typename'], "Person")
-        self.assertEqual(inputs[0]['action'], "work")
-        self.assertEqual(inputs[1]['affectedQuantity']['numericValue'], 1.5)
-        self.assertEqual(inputs[2]['affects']['resourceClassifiedAs']['name'], "component1")
-        self.assertEqual(inputs[3]['provider']['name'], "testUser11222")
-        self.assertEqual(outputs[0]['action'], "produce")
-        self.assertEqual(committedInputs[0]['action'], "work")
-        self.assertEqual(committedInputs[1]['committedQuantity']['numericValue'], 2.5)
-        self.assertEqual(committedInputs[1]['plan']['name'], 'order1')
-        self.assertEqual(committedInputs[1]['plan']['scope'][0]['name'], 'org1')
-        self.assertEqual(committedInputs[2]['resourceClassifiedAs']['name'], "component1")
-        self.assertEqual(committedInputs[1]['provider']['name'], "not user")
-        self.assertEqual(committedOutputs[0]['action'], "produce")
-        self.assertEqual(previousProcesses[0]['name'], 'proc2')
-        self.assertEqual(nextProcesses[0]['name'], 'proc3')
-        self.assertEqual(process['processClassifiedAs']['name'], 'pt1')
-
-    def test_plan(self):
-        result = schema.execute('''
-                mutation {
-                  createToken(username: "testUser11222", password: "123456") {
-                    token
-                  }
-                }
-                ''')
-        call_result = result.data['createToken']
-        token = call_result['token']
-        test_agent = EconomicAgent.objects.get(name="testUser11222")
-
-        query = '''
-                query {
-                  viewer(token: "''' + token + '''") {
-                    agent(id: 2) {
-                      name
-                      ownedEconomicResources(category: INVENTORY) {
-                        id
-                        resourceClassifiedAs {
-                          name
-                          category
-                          processCategory
-                        }
-                        trackingIdentifier
-                        currentQuantity {
-                          numericValue
-                          unit {
-                            name
-                          }
-                        }
-                        image
-                        note
-                      }
-                      agentProcesses (isFinished: false) {
-                        name
-                        isFinished
-                      }
-                      agentPlans {
-                        name
-                        due
-                        note
-                      }
-                    }
-                  }
-                }
-                '''
-        result = schema.execute(query)
-        agent = result.data['viewer']['agent']
-        ownedEconomicResources = result.data['viewer']['agent']['ownedEconomicResources']
-        processes = result.data['viewer']['agent']['agentProcesses']
-        plans = result.data['viewer']['agent']['agentPlans']
-        self.assertEqual(agent['name'], 'org1')
-        self.assertEqual(ownedEconomicResources[0]['resourceClassifiedAs']['name'], 'product1')
-        self.assertEqual(ownedEconomicResources[0]['resourceClassifiedAs']['processCategory'], 'produced')
-        self.assertEqual(len(ownedEconomicResources), 2)
-        self.assertEqual(ownedEconomicResources[0]['currentQuantity']['unit']['name'], 'Each')
-        self.assertEqual(len(processes), 1)
-        self.assertEqual(processes[0]['name'], 'proc1')
-        self.assertEqual(len(plans), 1)
-        self.assertEqual(plans[0]['name'], 'order1')
-
-    def test_notification_settings(self):
-        result = schema.execute('''
-                mutation {
-                  createToken(username: "testUser11222", password: "123456") {
-                    token
-                  }
-                }
-                ''')
-        call_result = result.data['createToken']
-        token = call_result['token']
-        test_agent = EconomicAgent.objects.get(name="testUser11222")
-
-        #result1 = schema.execute('''
-        #        mutation {
-        #          createNotificationSetting(token: "''' + token + '''", notificationTypeId: 1, agentId: 1, send: true) {
-        #            notificationSetting {
-        #              id
-        #              notificationType {
-        #                id
-        #                display
-        #                label
-        #                description
-        #              }
-        #              send
-        #              agent {
-        #                name
-        #              }
-        #            }
-        #          }
-        #        }
-        #        ''')
-        #import pdb; pdb.set_trace()
-        #self.assertEqual(result1.data['createNotificationSetting']['notificationSetting']['send'], True)
-
-        query = '''
-                query {
-                  viewer(token: "''' + token + '''") {
-                    agent(id: 1) {
-                        name
-                        agentNotificationSettings {
-                            id
-                            agent {
-                              name
-                            }
-                            send
-                            notificationType {
-                              id
-                              label
-                              display
-                              description
-                            }
-                        }
-                    }
-                  }
-                }
-                '''
-        result5 = schema.execute(query)
-        notifSettings = result5.data['viewer']['agent']['agentNotificationSettings']
-        self.assertEqual(notifSettings[0]['id'], "1")
-        self.assertEqual(notifSettings[0]['notificationType']['label'], "api_test")
-
-#    def test_create_update_delete_process(self):
-#        result = schema.execute('''
-#               mutation {
-#                 createToken(username: "testUser11222", password: "123456") {
-#                   token
-#                  }
-#                }
-#                ''', context_value=MockContext())
-#        call_result = result.data['createToken']
-#        token = call_result['token']
-#        test_agent = EconomicAgent.objects.get(name="testUser11222")
-
-#        result1 = schema.execute('''
-#                mutation {
-#                  createProcess(token: "''' + token + '''", name: "Make something cool", plannedStart: "2017-07-07", plannedFinish: "2017-07-14", scopeId: 2, planId: 1) {
-#                    process {
-#                        name
-#                        scope {
-#                            name
-#                        }
-#                        isFinished
-#                        plannedStart
-#                        plannedFinish
-#                        plannedDuration
-#                    }
-#                  }
-#                }
-#                ''', context_value=MockContext())
-#        self.assertEqual(result1.data['createProcess']['process']['name'], "Make something cool")
-#        self.assertEqual(result1.data['createProcess']['process']['scope']['name'], "org1")
-#        self.assertEqual(result1.data['createProcess']['process']['isFinished'], False)
-#        self.assertEqual(result1.data['createProcess']['process']['plannedStart'], "2017-07-07")
-#        self.assertEqual(result1.data['createProcess']['process']['plannedFinish'], "2017-07-14")
-#        self.assertEqual(result1.data['createProcess']['process']['plannedDuration'], "7 days, 0:00:00")
-
-#        result2 = schema.execute('''
-#                    mutation {
-#                        updateProcess(token: "''' + token + '''", id: 4, plannedFinish: "2017-07-15", isFinished: true) {
-#                            process {
-#                                name
-#                                scope {
-#                                    name
-#                                }
-#                                isFinished
-#                                plannedStart
-#                                plannedFinish
-#                                plannedDuration
-#                            }
-#                        }
-#                    }
-#                    ''', context_value=MockContext())
-
-#        self.assertEqual(result2.data['updateProcess']['process']['name'], "Make something cool")
-#        self.assertEqual(result2.data['updateProcess']['process']['scope']['name'], "org1")
-#        self.assertEqual(result2.data['updateProcess']['process']['isFinished'], True)
-#        self.assertEqual(result2.data['updateProcess']['process']['plannedStart'], "2017-07-07")
-#        self.assertEqual(result2.data['updateProcess']['process']['plannedDuration'], "8 days, 0:00:00")
-
-#        result3 = schema.execute('''
-#                    mutation {
-#                        deleteProcess(token: "''' + token + '''", id: 4) {
-#                            process {
-#                                name
-#                            }
-#                        }
-#                    }
-#                    ''', context_value=MockContext())
-
-#    def test_create_update_delete_process(self):
-#        result = schema.execute('''
-#                mutation {
-#                  createToken(username: "testUser11222", password: "123456") {
-#                    token
-#                  }
-#                }
-#                ''')
-#        call_result = result.data['createToken']
-#        token = call_result['token']
-#        test_agent = EconomicAgent.objects.get(name="testUser11222")
-
-#        result1 = schema.execute('''
-#                mutation {
-#                  createProcess(token: "''' + token + '''", name: "Make something cool", plannedStart: "2017-07-07", plannedDuration: 7, scopeId: 2) {
-#                    process {
-#                        name
-#                        scope {
-#                            name
-#                        }
-#                        isFinished
-#                        plannedStart
-#                        plannedDuration
-#                    }
-#                  }
-#                }
-#                ''')
-#        #import pdb; pdb.set_trace()
-#        self.assertEqual(result1.data['createProcess']['process']['name'], "Make something cool")
-#        self.assertEqual(result1.data['createProcess']['process']['scope']['name'], "org1")
-#        self.assertEqual(result1.data['createProcess']['process']['isFinished'], False)
-#        self.assertEqual(result1.data['createProcess']['process']['plannedStart'], "2017-07-07")
-#        self.assertEqual(result1.data['createProcess']['process']['plannedDuration'], "7 days, 0:00:00")
-
-#        result2 = schema.execute('''
-#                    mutation {
-#                        updateProcess(token: "''' + token + '''", id: 4, plannedDuration: 10, isFinished: true) {
-#                            process {
-#                                name
-#                                scope {
-#                                    name
-#                                }
-#                                isFinished
-#                                plannedStart
-#                                plannedDuration
-#                            }
-#                        }
-#                    }
-#                    ''')
-
-#        self.assertEqual(result2.data['updateProcess']['process']['name'], "Make something cool")
-#        self.assertEqual(result2.data['updateProcess']['process']['scope']['name'], "org1")
-#        self.assertEqual(result2.data['updateProcess']['process']['isFinished'], True)
-#        self.assertEqual(result2.data['updateProcess']['process']['plannedStart'], "2017-07-07")
-#        self.assertEqual(result2.data['updateProcess']['process']['plannedDuration'], "10 days, 0:00:00")
-
-#        result3 = schema.execute('''
-#                    mutation {
-#                        deleteProcess(token: "''' + token + '''", id: 4) {
-#                            process {
-#                                name
-#                            }
-#                        }
-#                    }
-#                    ''')
-
-#        proc = None
-#        try:
-#            proc = Process.objects.get(pk=4)
-#        except:
-#            pass
-#        self.assertEqual(proc, None)
-
 
 ######################### SAMPLE QUERIES #####################
 
 '''
+# get token for graphiql
+
+mutation {
+    createToken(username: "testUser11222", password: "123456") {
+        token
+    }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    action(label: "produce") {
+      id
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    actions {
+      id
+      label
+      note
+      resourceEffect
+      onhandEffect
+      inputOutput
+      pairsWith
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    action (id: 3) {
+      id
+      label
+      note
+      resourceEffect
+      onhandEffect
+      inputOutput
+      pairsWith
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    agent(id:1) {
+      id
+      name
+      image
+      note
+      __typename
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    agentRelationshipRoles {
+      id
+      roleLabel
+      inverseRoleLabel
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    agentRelationshipRole (id: 1) {
+      id
+      roleLabel
+      inverseRoleLabel
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    units {
+      id
+      label
+      symbol
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    unit (id:8) {
+      id
+      label
+      symbol
+    }
+  }
+}
+
+# this would probably never be queried by itself in an app
+query($token: String) {
+  viewer(token: $token) {
+    measure (id: 1){
+      id
+      hasNumericalValue
+      hasUnit {
+        label
+        symbol
+      }
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    economicResources {
+      id
+      name
+      trackingIdentifier
+      accountingQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      onhandQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      classifiedAs
+      conformsTo {
+        name
+      }
+      image
+      note
+      unitOfEffort {
+        label
+      }
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    economicResource (id: 13) {
+      id
+      name
+      trackingIdentifier
+      accountingQuantity {
+        hasNumericalValue
+        unit {
+          label
+        }
+      }
+      onhandQuantity {
+        hasNumericalValue
+        unit {
+          label
+        }
+      }
+      classifiedAs
+      conformsTo {
+        name
+      }
+      image
+      note
+      unitOfEffort {
+        label
+      }
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    processes {
+      id
+      name
+      hasBeginning
+      hasEnd
+      finished
+      note
+      nestedIn {
+        name
+      }
+      inScopeOf {
+        name
+      }
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    process (id: 1) {
+      id
+      name
+      hasBeginning
+      hasEnd
+      finished
+      note
+    }
+  }
+}
+
+mutation ($token: String!) {
+  createProcess(token: $token, name: "Create big doc", hasBeginning: "2017-10-01", 
+    hasEnd: "2017-10-10", note: "testing", finished: false, planId: ) {
+    process {
+      id
+      name
+      hasBeginning
+      hasEnd
+      finished
+      note
+      }
+    }
+  }
+  
+query($token: String) {
+  viewer(token: $token) {
+    resourceSpecifications {
+      id
+      name
+      image
+      resourceClassifiedAs
+      defaultUnitOfResource {
+        label
+      }
+      defaultUnitOfEffort {
+        label
+      }
+      note
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    resourceSpecification (id: 1) {
+      id
+      name
+      image
+      resourceClassifiedAs
+      defaultUnitOfResource {
+        label
+      }
+      defaultUnitOfEffort {
+        label
+      }
+      note
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    plans {
+      id
+      name
+      due
+      note
+      processes {
+        name
+      }
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    plan (id: 1) {
+      id
+      name
+      due
+      note
+    }
+  }
+}
+
+
+###################################################################
+##################################################################3
+# OLD   OLD    OLD    OLD    OLD    OLD    OLD    OLD    OLD    OLD  
+###################################################################
+              
 # agent data
 
 # user agent is authorized to create objects within that scope
@@ -1076,6 +304,7 @@ query($token: String) {
       image
       note
       type
+      validatedEventsCount(month:12, year:2017)
       eventsCount(month:12, year:2017)
       eventHoursCount(month:12, year:2017)
       eventPeopleCount(month:12, year:2017)
@@ -1264,6 +493,7 @@ query ($token: String) {
                 }
                 requestDistribution
                 note
+                isValidated
               }
             }
           }
@@ -2210,6 +1440,12 @@ query ($token: String) {
         inputOf {
           id
           name
+<<<<<<< HEAD
+=======
+          processPlan {
+            id
+          }
+>>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
         }
         validations {
           id
@@ -2716,6 +1952,10 @@ query ($token: String) {
       }
       userIsAuthorizedToUpdate
       userIsAuthorizedToDelete
+      validations {
+        id
+        validationDate
+      }
     }
   }
 }
@@ -2779,6 +2019,37 @@ query ($token: String) {
   }
 }
 
+# validation data
+
+query($token: String) {
+  viewer(token: $token) {
+    validation(id:5) {
+      id
+      validatedBy {
+        name
+      }
+      economicEvent {
+        action
+      }
+      validationDate
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    allValidations {
+      id
+      validatedBy {
+        name
+      }
+      economicEvent {
+        action
+      }
+      validationDate
+    }
+  }
+}
 
 # commitment data
 
@@ -2959,9 +2230,52 @@ query ($token: String) {
 
 query ($token: String) {
   viewer(token: $token) {
+    transfer(id: 160) {
+      name
+      plannedStart
+      scope {
+        name
+      }
+      exchangeAgreement {
+        name
+      }
+      note
+      provider {
+        name
+      }
+      receiver {
+        name
+      }
+      transferQuantity {
+        numericValue
+        unit {
+          name
+        }
+      }
+      transferEconomicEvents {
+        action
+      }
+      transferCommitments {
+        action
+      }
+      giveCommitment {
+        action
+      }
+      takeCommitment {
+        action
+      }
+      involvedAgents {
+        name
+      }
+    }
+  }
+}
+
+query ($token: String) {
+  viewer(token: $token) {
     transfer(id: 76) {
       name
-      plannedDate
+      plannedStart
       scope {
         name
       }
@@ -2970,6 +2284,9 @@ query ($token: String) {
         name
       }
       receiver {
+        name
+      }
+      resourceClassifiedAs {
         name
       }
       giveResource {
@@ -3013,8 +2330,6 @@ query ($token: String) {
     }
   }
 }
-
-# PLACE / LOCATION
 
 query ($token: String) {
   viewer(token: $token) {
@@ -3612,7 +2927,11 @@ mutation ($token: String!) {
 }
 
 mutation ($token: String!) {
+<<<<<<< HEAD
   createValidation(token: $token, validatedById: 6, economicEventId: 392) {
+=======
+  createValidation(token: $token, validatedById: 6, economicEventId: 393, note: "test") {
+>>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
     validation {
       id
       validatedBy {
@@ -3628,6 +2947,10 @@ mutation ($token: String!) {
         }
       }
       validationDate
+<<<<<<< HEAD
+=======
+      note
+>>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
     }
   }
 }
@@ -3679,6 +3002,7 @@ mutation ($token: String!) {
 }
 
 mutation ($token: String!) {
+<<<<<<< HEAD
   createPlace(token: $token, name:"testloc2", note:"test", address:"123 some street", latitude: 54.333, longitude: 45.333) {
     place {
       id
@@ -3692,6 +3016,8 @@ mutation ($token: String!) {
 }
 
 mutation ($token: String!) {
+=======
+>>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
   createAgentResourceClassification(token: $token, agentId: 6, resourceClassificationId: 60) {
     agentResourceClassification {
       id
@@ -3720,6 +3046,7 @@ mutation ($token: String!) {
   }
 }
 
+<<<<<<< HEAD
 mutation ($token: String!) {
   createResourceClassification(token: $token, note: "test create", name:"testrc", 
     image:"http://image.example", category: "inventory", unit:"Each") {
@@ -3747,141 +3074,6 @@ mutation ($token: String!) {
   }
 }
 
-mutation ($token: String!) {
-  createTransfer(token: $token, 
-    providerId: 39, 
-    receiverId: 26, 
-    affectsId: 124,
-    affectedNumericValue: "1", 
-    start: "2020-02-10", 
-    createResource: true, 
-    resourceImage: "http://someimage.com/image", 
-    resourceNote: "first trying with a translation") {
-    transfer {
-      id
-      name
-      plannedDate
-      scope {
-        name
-      }
-      note
-      provider {
-        name
-      }
-      receiver {
-        name
-      }
-      giveResource {
-        id
-        trackingIdentifier
-      }
-      takeResource {
-        id
-        trackingIdentifier
-      }
-      transferQuantity {
-        numericValue
-        unit {
-          name
-        }
-      }
-      transferEconomicEvents {
-        action
-      }
-      giveEconomicEvent {
-        id
-        action
-        provider {
-          name
-        }
-        receiver {
-          name
-        }
-        affectedQuantity {
-          numericValue
-          unit {
-            name
-          }
-        }
-      }
-      takeEconomicEvent {
-        id
-        action
-      }
-      involvedAgents {
-        id
-        name
-      }
-    }
-  }
-}
-
-mutation ($token: String!) {
-  createTransfer(token: $token, 
-    providerId: 39, 
-    receiverId: 26, 
-    affectsId: 124,
-    receiverAffectsId: 129,
-    affectedNumericValue: "3", 
-    start: "2020-02-10", 
-    createResource: false) {
-    transfer {
-      id
-      name
-      plannedDate
-      scope {
-        name
-      }
-      note
-      provider {
-        name
-      }
-      receiver {
-        name
-      }
-      giveResource {
-        id
-        trackingIdentifier
-      }
-      takeResource {
-        id
-        trackingIdentifier
-      }
-      transferQuantity {
-        numericValue
-        unit {
-          name
-        }
-      }
-      transferEconomicEvents {
-        action
-      }
-      giveEconomicEvent {
-        id
-        action
-        provider {
-          name
-        }
-        receiver {
-          name
-        }
-        affectedQuantity {
-          numericValue
-          unit {
-            name
-          }
-        }
-      }
-      takeEconomicEvent {
-        id
-        action
-      }
-      involvedAgents {
-        id
-        name
-      }
-    }
-  }
-}
-
+=======
+>>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
 '''

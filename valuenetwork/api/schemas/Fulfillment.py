@@ -1,9 +1,9 @@
 #
 # Graphene schema for exposing Fulfillment
 #
-
+"""
 import graphene
-from valuenetwork.api.models import QuantityValue as FulfillmentProxy
+from vocab.models import Fulfillment as FulfillmentProxy
 from valuenetwork.api.types.EconomicEvent import Fulfillment
 
 
@@ -23,4 +23,4 @@ class Query(graphene.AbstractType):
             if ff:
                 return ff
         return None
-
+"""

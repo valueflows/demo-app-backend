@@ -1,6 +1,6 @@
 #
 # Graphene schema for exposing Exchange model
-
+"""
 import graphene
 
 from valuenetwork.valueaccounting.models import Exchange
@@ -30,3 +30,4 @@ class Query(graphene.AbstractType):
 
     def resolve_all_exchange_agreements(self, args, context, info):
         return Exchange.objects.all()
+"""

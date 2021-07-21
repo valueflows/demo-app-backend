@@ -1,7 +1,7 @@
 #
 # NotificationSetting: user defined setting for receiving (or not) a type of notification
 #
-
+"""
 import graphene
 from graphene_django.types import DjangoObjectType
 from valuenetwork.api.models import formatAgent
@@ -28,3 +28,4 @@ class NotificationSetting(DjangoObjectType):
 
     def resolve_notification_type(self, args, *rargs):
         return self.notice_type
+"""

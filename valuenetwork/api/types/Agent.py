@@ -5,120 +5,119 @@
 import graphene
 from graphene_django.types import DjangoObjectType
 from django.db.models import Q
-from valuenetwork.valueaccounting.models import EconomicAgent, EconomicResourceType, AgentType, EventTypeManager, EventType, AgentResourceType, EconomicResourceType
+from valuenetwork.valueaccounting.models import VocabAgent #, VocabAction #EconomicResourceType, AgentType, EventTypeManager, EventType, AgentResourceType, EconomicResourceType 
 import valuenetwork.api.types as types
-from valuenetwork.api.types.AgentRelationship import AgentRelationship, AgentRelationshipCategory, AgentRelationshipRole
-from valuenetwork.api.models import Organization as OrganizationModel, Person as PersonModel, formatAgentList
+#?from api.types.AgentRelationship import AgentRelationship, AgentRelationshipRole
+from valuenetwork.api.models import Organization as OrganizationProxy, Person as PersonProxy, formatAgentList
 from django.core.exceptions import ValidationError
 import datetime
 
 
 def _load_identified_agent(self):
-    return EconomicAgent.objects.get(pk=self.id)
+    return VocabAgent.objects.get(pk=self.id)
 
-
+"""
 class OrganizationClassification(DjangoObjectType):
     note = graphene.String(source='note')
 
     class Meta:
         model = AgentType
         only_fields = ('id', 'name')
-
+"""
 
 class Agent(graphene.Interface):
     id = graphene.String()
     name = graphene.String()
-    type = graphene.String(source='type')
+    #type = graphene.String(source='type')
     image = graphene.String(source='image')
     note = graphene.String(source='note')
-    primary_location = graphene.Field(lambda: types.Place)
-    primary_phone = graphene.String(source='primary_phone')
-    email = graphene.String(source='email')
+    #primary_location = graphene.Field(lambda: types.Place)
+    #primary_phone = graphene.String(source='primary_phone')
+    #email = graphene.String(source='email')
 
-    owned_economic_resources = graphene.List(lambda: types.EconomicResource,
-                                             category=types.EconomicResourceCategory(),
-                                             resourceClassificationId=graphene.Int(),
-                                             page=graphene.Int())
+    #owned_economic_resources = graphene.List(lambda: types.EconomicResource,
+    #                                         #category=types.EconomicResourceCategory(),
+    #                                         #resourceClassificationId=graphene.Int(),
+    #                                         page=graphene.Int())
 
-    search_owned_inventory_resources = graphene.List(lambda: types.EconomicResource,
-                                              search_string=graphene.String())
+    #search_owned_inventory_resources = graphene.List(lambda: types.EconomicResource,
+    #                                          search_string=graphene.String())
 
-    agent_defined_resource_classifications = graphene.List(lambda: types.ResourceClassification,
-                                                   action=graphene.String())
+    #agent_defined_resource_classifications = graphene.List(lambda: types.ResourceClassification,
+    #                                               action=graphene.String())
 
-    agent_processes = graphene.List(lambda: types.Process,
-                                    is_finished=graphene.Boolean())
+    #agent_processes = graphene.List(lambda: types.Process,
+    #                                is_finished=graphene.Boolean())
 
-    search_agent_processes = graphene.List(lambda: types.Process,
-                                              search_string=graphene.String(),
-                                              is_finished=graphene.Boolean())
+    #search_agent_processes = graphene.List(lambda: types.Process,
+    #                                          search_string=graphene.String(),
+    #                                          is_finished=graphene.Boolean())
 
-    agent_plans = graphene.List(lambda: types.Plan,
-                                is_finished=graphene.Boolean(),
-                                year=graphene.Int(),
-                                month=graphene.Int())
+    #agent_plans = graphene.List(lambda: types.Plan,
+    #                            is_finished=graphene.Boolean(),
+    #                            year=graphene.Int(),
+    #                            month=graphene.Int())
 
-    search_agent_plans = graphene.List(lambda: types.Plan,
-                                              search_string=graphene.String(),
-                                              is_finished=graphene.Boolean())
+    #search_agent_plans = graphene.List(lambda: types.Plan,
+    #                                          search_string=graphene.String(),
+    #                                          is_finished=graphene.Boolean())
 
-    agent_economic_events = graphene.List(lambda: types.EconomicEvent,
-                                          latest_number_of_days=graphene.Int(),
-                                          request_distribution=graphene.Boolean(),
-                                          action=graphene.String(),
-                                          year=graphene.Int(),
-                                          month=graphene.Int())
+    #agent_economic_events = graphene.List(lambda: types.EconomicEvent,
+    #                                      latest_number_of_days=graphene.Int(),
+    #                                      request_distribution=graphene.Boolean(),
+    #                                      action=graphene.String(),
+    #                                      year=graphene.Int(),
+    #                                      month=graphene.Int())
 
-    agent_commitments = graphene.List(lambda: types.Commitment,
-                                      latest_number_of_days=graphene.Int(),
-                                      page=graphene.Int())
+    #agent_commitments = graphene.List(lambda: types.Commitment,
+    #                                  latest_number_of_days=graphene.Int(),
+    #                                  page=graphene.Int())
 
-    search_agent_commitments = graphene.List(lambda: types.Commitment,
-                                              search_string=graphene.String(),
-                                              is_finished=graphene.Boolean())
+    #search_agent_commitments = graphene.List(lambda: types.Commitment,
+    #                                          search_string=graphene.String(),
+    #                                          is_finished=graphene.Boolean())
 
+    """
     agent_relationships = graphene.List(AgentRelationship,
-                                        role_id=graphene.Int(),
-                                        category=AgentRelationshipCategory())
+                                        role_id=graphene.Int())
+                                        #category=AgentRelationshipCategory())
 
     agent_relationships_as_subject = graphene.List(AgentRelationship,
-                                        role_id=graphene.Int(),
-                                        category=AgentRelationshipCategory())
+                                        role_id=graphene.Int())
+                                        #category=AgentRelationshipCategory())
 
     agent_relationships_as_object = graphene.List(AgentRelationship,
-                                        role_id=graphene.Int(),
-                                        category=AgentRelationshipCategory())
+                                        role_id=graphene.Int())
+                                        #category=AgentRelationshipCategory())
+    """
+    #agent_roles = graphene.List(AgentRelationshipRole)
 
-    agent_roles = graphene.List(AgentRelationshipRole)
-
-    agent_recipes = graphene.List(lambda: types.ResourceClassification)
+    #agent_recipes = graphene.List(lambda: types.ResourceClassification)
 
     #agent_recipe_bundles = graphene.List(ResourceClassification)
 
-    faircoin_address = graphene.String()
+    #agent_notification_settings = graphene.List(lambda: types.NotificationSetting)
 
-    agent_notification_settings = graphene.List(lambda: types.NotificationSetting)
+    #member_relationships = graphene.List(AgentRelationship)
 
-    member_relationships = graphene.List(AgentRelationship)
+    #agent_skills = graphene.List(lambda: types.ResourceClassification)
 
-    agent_skills = graphene.List(lambda: types.ResourceClassification)
+    #agent_skill_relationships = graphene.List(lambda: types.AgentResourceClassification)
 
-    agent_skill_relationships = graphene.List(lambda: types.AgentResourceClassification)
+    #commitments_matching_skills = graphene.List(lambda: types.Commitment,
+    #                                            page=graphene.Int())
 
-    commitments_matching_skills = graphene.List(lambda: types.Commitment,
-                                                page=graphene.Int())
+    #validated_events_count = graphene.Int(month=graphene.Int(), year=graphene.Int())
 
-    validated_events_count = graphene.Int(month=graphene.Int(), year=graphene.Int())
+    #events_count = graphene.Int(year=graphene.Int(), month=graphene.Int())
 
-    events_count = graphene.Int(year=graphene.Int(), month=graphene.Int())
+    #event_hours_count = graphene.Int(year=graphene.Int(), month=graphene.Int())
 
-    event_hours_count = graphene.Int(year=graphene.Int(), month=graphene.Int())
+    #event_people_count = graphene.Int(year=graphene.Int(), month=graphene.Int())
 
-    event_people_count = graphene.Int(year=graphene.Int(), month=graphene.Int())
-
-    def resolve_primary_location(self, args, *rargs):
-        return self.primary_location
-
+    #def resolve_primary_location(self, args, *rargs):
+    #    return self.primary_location
+    """
     def resolve_owned_economic_resources(self, args, context, info):
         type = args.get('category', types.EconomicResourceCategory.NONE)
         resource_class_id = args.get('resourceClassificationId', None)
@@ -188,8 +187,8 @@ class Agent(graphene.Interface):
                     if rt.behavior == "produced" or rt.behavior == "used" or rt.behavior == "cited" or rt.behavior == "consumed":
                         filtered_rts.append(rt)
             return filtered_rts
-
-
+    """
+    """
     # if an organization, this returns processes done in that context
     # if a person, this returns proceses the person has worked on
     def resolve_agent_processes(self, args, context, info):
@@ -216,6 +215,8 @@ class Agent(graphene.Interface):
             return agent.search_processes(search_string=search_string, finished=finished)
         return None
 
+    """
+    """
     # if an organization, this returns plans from that context
     # if a person, this returns plans the person has worked on
     def resolve_agent_plans(self, args, context, info):
@@ -249,7 +250,8 @@ class Agent(graphene.Interface):
         if agent:
             return agent.search_plans(search_string=search_string, finished=finished)
         return None
-
+    """
+    """
     # returns events where an agent is a provider, receiver, or scope agent, excluding exchange related events
     def resolve_agent_economic_events(self, args, context, info):
         agent = _load_identified_agent(self)
@@ -265,15 +267,15 @@ class Agent(graphene.Interface):
                 events = agent.involved_in_events().filter(event_date__year=year).filter(event_date__month=month)
             else:
                 events = agent.involved_in_events()
-            #events = events.exclude(event_type__name="Give").exclude(event_type__name="Receive")
-            events = events.exclude(event_type__name="Give")
+            events = events.exclude(event_type__name="Give").exclude(event_type__name="Receive")
             if action != None:
                 events = events.filter(event_type=EventType.objects.convert_action_to_event_type(action))
             if request_distribution != None:
                 events = events.filter(is_contribution=request_distribution)
             return events
         return None
-
+    """
+    """
     # returns commitments where an agent is a provider, receiver, or scope agent, excluding exchange related events
     def resolve_agent_commitments(self, args, context, info):
         agent = _load_identified_agent(self)
@@ -309,14 +311,15 @@ class Agent(graphene.Interface):
         if agent:
             return agent.search_commitments(search_string=search_string, finished=finished)
         return None
-
+    """
+    """
     def resolve_agent_relationships(self, args, context, info):
         agent = _load_identified_agent(self)
-        cat = args.get('category')
-        role_id = args.get('role_id')
-        if cat and role_id:
-            raise ValidationError('Please do not submit both category and role.')
-        if agent:
+        #cat = args.get('category')
+        #role_id = args.get('role_id')
+        #if cat and role_id:
+        #    raise ValidationError('Please do not submit both category and role.')
+        if agent: #TODO
             assocs = agent.all_active_associations()
             filtered_assocs = []
             if role_id:
@@ -335,10 +338,10 @@ class Agent(graphene.Interface):
 
     def resolve_agent_relationships_as_subject(self, args, context, info):
         agent = _load_identified_agent(self)
-        cat = args.get('category')
-        role_id = args.get('role_id')
-        if cat and role_id:
-            raise ValidationError('Please do not submit both category and role.')
+        #cat = args.get('category')
+        #role_id = args.get('role_id')
+        #if cat and role_id:
+        #    raise ValidationError('Please do not submit both category and role.')
         if agent:
             assocs = agent.active_associates_as_subject()
             filtered_assocs = []
@@ -358,10 +361,10 @@ class Agent(graphene.Interface):
 
     def resolve_agent_relationships_as_object(self, args, context, info):
         agent = _load_identified_agent(self)
-        cat = args.get('category')
-        role_id = args.get('role_id')
-        if cat and role_id:
-            raise ValidationError('Please do not submit both category and role.')
+        #cat = args.get('category')
+        #role_id = args.get('role_id')
+        #if cat and role_id:
+        #    raise ValidationError('Please do not submit both category and role.')
         if agent:
             assocs = agent.active_associates_as_object()
             filtered_assocs = []
@@ -378,27 +381,25 @@ class Agent(graphene.Interface):
             else:
                 return assocs
         return None
+    """
 
-    def resolve_agent_roles(self, args, context, info):
-        agent = _load_identified_agent(self)
-        if agent:
-            return agent.active_association_types()
-        return None
+    #def resolve_agent_roles(self, args, context, info):
+    #    agent = _load_identified_agent(self)
+    #    if agent:
+    #        return agent.active_association_types()
+    #    return None
 
-    def resolve_agent_recipes(self, args, context, info):
-        agent = _load_identified_agent(self)
-        if agent:
-            return agent.recipes()
-        return None
+    #def resolve_agent_recipes(self, args, context, info):
+    #    agent = _load_identified_agent(self)
+    #    if agent:
+    #        return agent.recipes()
+    #    return None
 
-    def resolve_faircoin_address(self, args, *rargs):
-        agent = _load_identified_agent(self)
-        return agent.faircoin_address()
+    #def resolve_agent_notification_settings(self, args, context, info):
+    #    agent = _load_identified_agent(self)
+    #    return agent.notification_settings()
 
-    def resolve_agent_notification_settings(self, args, context, info):
-        agent = _load_identified_agent(self)
-        return agent.notification_settings()
-
+"""
     #Returns member type associations ordered by the type (hard-coded manager then member).
     def resolve_member_relationships(self, args, context, info):
         agent = _load_identified_agent(self)
@@ -519,7 +520,7 @@ class Agent(graphene.Interface):
                         people.append(event.from_agent)
             return len(people)
         return None
-
+    """
     # returns resource classifications that have a recipe, for this and parent agents
     #def resolve_agent_recipe_bundles(self, args, context, info):
     #    agent = _load_identified_agent(self)
@@ -529,13 +530,12 @@ class Agent(graphene.Interface):
 
 
 # ValueFlows type for a Person (singular) Agent.
-# In OCP there are no different properties, but some different behavior/filtering.
 
 class Person(DjangoObjectType):
     class Meta:
         interfaces = (Agent, )
-        model = PersonModel #EconomicAgent
-        only_fields = ('id', 'name', 'image', 'note', 'primary_location', 'email')
+        model = PersonProxy #EconomicAgent
+        only_fields = ('id', 'name', 'image', 'note') #, 'primary_location', 'email')
 
 
 # Organization - an Agent which is not a Person, and can be further classified from there
@@ -544,5 +544,6 @@ class Organization(DjangoObjectType):
 
     class Meta:
         interfaces = (Agent, )
-        model = OrganizationModel #EconomicAgent
-        only_fields = ('id', 'name', 'image', 'note', 'primary_location', 'email')
+        model = OrganizationProxy #EconomicAgent
+        only_fields = ('id', 'name', 'image', 'note') #, 'primary_location', 'email')
+

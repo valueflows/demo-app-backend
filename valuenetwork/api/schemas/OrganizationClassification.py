@@ -1,7 +1,7 @@
 #
 # Graphene schema for exposing OrganizationClassification model
 #
-
+"""
 import graphene
 from valuenetwork.valueaccounting.models import AgentType
 from valuenetwork.api.types.Agent import OrganizationClassification
@@ -27,3 +27,4 @@ class Query(graphene.AbstractType):
 
     def resolve_all_organization_classifications(self, args, context, info):
         return AgentType.objects.exclude(party_type="individual")
+"""

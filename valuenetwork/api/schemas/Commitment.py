@@ -2,12 +2,13 @@
 # Graphene schema for exposing Commitment
 #
 
+"""
 import graphene
 import datetime
 from decimal import Decimal
-from valuenetwork.valueaccounting.models import Commitment as CommitmentProxy, EconomicAgent, EconomicResourceType, EconomicResource, Unit, EventType, Process, Order, AgentUser
-from valuenetwork.api.types.Commitment import Commitment
-from valuenetwork.api.types.EconomicEvent import Action
+from valuenetwork.valueaccounting.models import Commitment as CommitmentProxy, Agent, ResourceSpecification, EconomicResource, Unit, Action, Process, Plan #, AgentUser
+from api.types.Commitment import Commitment
+from api.types.EconomicEvent import Action
 from six import with_metaclass
 from django.contrib.auth.models import User
 from .Auth import AuthedInputMeta, AuthedMutation
@@ -19,7 +20,7 @@ class Query(graphene.AbstractType):
     commitment = graphene.Field(Commitment,
                                 id=graphene.Int())
 
-    all_commitments = graphene.List(Commitment)
+    commitments = graphene.List(Commitment)
 
     def resolve_commitment(self, args, *rargs):
         id = args.get('id')
@@ -29,10 +30,10 @@ class Query(graphene.AbstractType):
                 return event
         return None
 
-    def resolve_all_commitments(self, args, context, info):
+    def resolve_commitments(self, args, context, info):
         return CommitmentProxy.objects.all()
-
-
+"""
+"""
 #assumption: for commitments related to a process, the plan has already been created when these mutations are called
 
 class CreateCommitment(AuthedMutation):
@@ -267,3 +268,4 @@ class DeleteCommitment(AuthedMutation):
                 raise PermissionDenied("Commitment has fulfilling events so cannot be deleted.")
 
         return DeleteCommitment(commitment=commitment)
+"""

@@ -1,7 +1,7 @@
 #
 # Exchange:
 #
-
+"""
 import graphene
 from graphene_django.types import DjangoObjectType
 import valuenetwork.api.types as types
@@ -120,3 +120,4 @@ class Transfer(DjangoObjectType):
         for agent in agents:
             formatted_agents.append(formatAgent(agent))
         return formatted_agents
+"""

@@ -1,7 +1,7 @@
 #
 # Commitment: A planned economic event or transfer that has been promised by an agent to another agent.
 #
-
+"""
 import jwt
 import graphene
 from django.conf import settings
@@ -11,48 +11,53 @@ from django.core.exceptions import PermissionDenied
 
 from graphene_django.types import DjangoObjectType
 
-
 import valuenetwork.api.types as types
-from valuenetwork.api.types.QuantityValue import Unit, QuantityValue
+from valuenetwork.api.types.Measure import Unit, Measure
 from valuenetwork.api.schemas.Auth import _authUser
-from valuenetwork.valueaccounting.models import Commitment as CommitmentProxy, AgentUser
-from valuenetwork.api.models import formatAgent, Person, Organization, QuantityValue as QuantityValueProxy, Fulfillment as FulfillmentProxy
+from valuenetwork.valueaccounting.models import Commitment as CommitmentProxy, Measure as MeasureProxy #, AgentUser
+from valuenetwork.api.models import formatAgent, Person, Organization #, Fulfillment as FulfillmentProxy
 
 
 class Commitment(DjangoObjectType):
     action = graphene.String(source='action')
-    #process = graphene.Field(lambda: types.Process)
-    input_of = graphene.Field(lambda: types.Process)
-    output_of = graphene.Field(lambda: types.Process)
-    provider = graphene.Field(lambda: types.Agent)
-    receiver = graphene.Field(lambda: types.Agent)
-    scope = graphene.Field(lambda: types.Agent)
-    resource_classified_as = graphene.Field(lambda: types.ResourceClassification)
-    involves = graphene.Field(lambda: types.EconomicResource)
-    committed_quantity = graphene.Field(QuantityValue)
-    committed_on = graphene.String(source='committed_on')
-    planned_start = graphene.String(source='planned_start')
+    #input_of = graphene.Field(lambda: types.Process)
+    #output_of = graphene.Field(lambda: types.Process)
+    #provider = graphene.Field(lambda: types.Agent)
+    #receiver = graphene.Field(lambda: types.Agent)
+    #in_scope_of = graphene.Field(lambda: types.Agent)
+    #resource_conforms_to = graphene.Field(lambda: types.ResourceSpecification)
+    resource_classified_as = graphene.String(source='resource_classified_as')
+    #resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
+    #resource_quantity = graphene.Field(lambda: types.Measure)
+    #effort_quantity = graphene.Field(lambda: types.Measure)
+    created = graphene.String(source='created')
+    has_beginning = graphene.String(source='has_beginning')
+    has_end = graphene.String(source='has_end')
+    has_point_in_time = graphene.String(source='has_point_in_time')
     due = graphene.String(source='due')
-    is_finished = graphene.Boolean(source='is_finished')
-    plan = graphene.Field(lambda: types.Plan)
-    is_plan_deliverable = graphene.Boolean(source='is_plan_deliverable')
-    for_plan_deliverable = graphene.Field(lambda: Commitment)
+    finished = graphene.Boolean(source='finished')
+    #independendent_demand_of = graphene.Field(lambda: types.Plan)
+    image = graphene.String(source='image')
+    #realization_of =
+    #agreed_in =
+    #at_location =
     note = graphene.String(source='note')
 
     class Meta:
-        model = CommitmentProxy
-        only_fields = ('id', 'url')
+        model = VocabCommitment
+        only_fields = ('id')
 
+    """
     fulfilled_by = graphene.List(lambda: types.Fulfillment,
                                  request_distribution=graphene.Boolean())
 
     involved_agents = graphene.List(lambda: types.Agent)
+    """
+    #deletable = graphene.Boolean()
 
-    is_deletable = graphene.Boolean()
+    #user_is_authorized_to_update = graphene.Boolean()
 
-    user_is_authorized_to_update = graphene.Boolean()
-
-    user_is_authorized_to_delete = graphene.Boolean()
+    #user_is_authorized_to_delete = graphene.Boolean()
 
     #def resolve_process(self, args, *rargs):
     #    return self.process
@@ -69,8 +74,8 @@ class Commitment(DjangoObjectType):
     def resolve_receiver(self, args, *rargs):
         return formatAgent(self.receiver)
 
-    def resolve_scope(self, args, *rargs):
-        return formatAgent(self.scope)
+    def resolve_in_scope_of(self, args, *rargs):
+        return formatAgent(self.in_scope_of)
 
     def resolve_involves(self, args, *rargs):
         return self.involves
@@ -78,8 +83,11 @@ class Commitment(DjangoObjectType):
     def resolve_resource_classified_as(self, args, *rargs):
         return self.resource_classified_as
 
-    def resolve_committed_quantity(self, args, *rargs):
-        return QuantityValueProxy(numeric_value=self.quantity, unit=self.unit_of_quantity)
+    def resolve_resource_quantity(self, args, *rargs):
+        return self.resource_quantity
+
+    def resolve_effort_quantity(self, args, *rargs):
+        return self.effort_quantity
 
     def resolve_plan(self, args, *rargs):
         return self.independent_demand
@@ -126,3 +134,4 @@ class Commitment(DjangoObjectType):
         context.user = _authUser(token)
         user_agent = AgentUser.objects.get(user=context.user).agent
         return user_agent.is_authorized(object_to_mutate=self)
+"""

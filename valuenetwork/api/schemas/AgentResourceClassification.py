@@ -3,6 +3,7 @@
 # This is used for person's skills management.  Also can be used in the future for sources for resources to be obtained for production inputs, but will need the action added for that.
 #
 
+"""
 import graphene
 from graphene_django.types import DjangoObjectType
 
@@ -88,3 +89,4 @@ class DeleteAgentResourceClassification(AuthedMutation):
                 raise PermissionDenied('User not authorized to perform this action.') 
 
         return DeleteAgentResourceClassification(agent_resource_classification=agent_resource_classification)
+"""

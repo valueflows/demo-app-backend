@@ -1,14 +1,13 @@
 #
 # Agent relationship entity schema def
 #
-# @package: OCP
-#
 
 import graphene
 from graphene_django.types import DjangoObjectType
 
 from valuenetwork.api.types.AgentRelationship import AgentRelationship, AgentRelationshipRole
-from valuenetwork.valueaccounting.models import EconomicAgent, AgentAssociation, AgentAssociationType, AgentUser
+#from vocab.models import EconomicAgent, AgentAssociation, AgentAssociationType, AgentUser
+from valuenetwork.valueaccounting.models import VocabAgent, VocabAgentRelationship, VocabAgentRelationshipRole
 from six import with_metaclass
 from django.contrib.auth.models import User
 from .Auth import AuthedInputMeta, AuthedMutation
@@ -21,20 +20,20 @@ class Query(graphene.AbstractType):
     agent_relationship = graphene.Field(AgentRelationship,
                                         id=graphene.Int())
 
-    all_agent_relationships = graphene.List(AgentRelationship)
+    agent_relationships = graphene.List(AgentRelationship)
 
     def resolve_agent_relationship(self, args, *rargs):
         id = args.get('id')
         if id is not None:
-            ar = AgentAssociation.objects.get(pk=id)
+            ar = VocabAgentRelationship.objects.get(pk=id)
             if ar:
                 return ar
         return None
 
-    def resolve_all_agent_relationships(self, args, context, info):
-        return AgentAssociation.objects.all()
+    def resolve_agent_relationships(self, args, context, info):
+        return VocabAgentRelationship.objects.all()
 
-
+"""
 class CreateAgentRelationship(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):
         subject_id = graphene.Int(required=True)
@@ -109,7 +108,7 @@ class UpdateAgentRelationship(AuthedMutation):
 
         return UpdateAgentRelationship(agent_relationship=agent_relationship)
 
-'''
+
 # TODO: Need to create an is_deletable method in models, which checks for any usage of this.  Else makes it inactivated.
 class DeleteAgentRelationship(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):
@@ -133,4 +132,4 @@ class DeleteAgentRelationship(AuthedMutation):
                 raise PermissionDenied("Process has economic events so cannot be deleted.")
 
         return DeleteAgentRelationship(agent_relationship=agent_relationship)
-'''
+"""

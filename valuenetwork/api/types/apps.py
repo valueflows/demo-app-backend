@@ -17,34 +17,34 @@ class ApiTypesAppConfig(AppConfig):
         comments.CommentMixin = CommentsMixin
         """
 
-        from valuenetwork.api.types.EconomicResource import EconomicResource, EconomicResourceCategory, ResourceClassification, Facet, FacetValue
-        types.EconomicResource = EconomicResource
-        types.EconomicResourceCategory = EconomicResourceCategory
-        types.ResourceClassification = ResourceClassification
-        types.Facet = Facet
-        types.FacetFalue = FacetValue
+        #from valuenetwork.api.types.EconomicResource import EconomicResource, EconomicResourceCategory, ResourceClassification, Facet, FacetValue
+        #types.EconomicResource = EconomicResource
+        #types.EconomicResourceCategory = EconomicResourceCategory
+        #types.ResourceClassification = ResourceClassification
+        #types.Facet = Facet
+        #types.FacetFalue = FacetValue
         from valuenetwork.api.types.Agent import Agent
         types.Agent = Agent
         from valuenetwork.api.types.Process import Process
         types.Process = Process
         from valuenetwork.api.types.Plan import Plan
         types.Plan = Plan
-        from valuenetwork.api.types.EconomicEvent import EconomicEvent
-        types.EconomicEvent = EconomicEvent
-        from valuenetwork.api.types.Commitment import Commitment
-        types.Commitment = Commitment
-        from valuenetwork.api.types.EconomicEvent import Fulfillment
-        types.Fulfillment = Fulfillment
-        from valuenetwork.api.types.Exchange import ExchangeAgreement
-        types.ExchangeAgreement = ExchangeAgreement
-        from valuenetwork.api.types.Exchange import Transfer
-        types.Transfer = Transfer
-        from valuenetwork.api.types.Place import Place
-        types.Place = Place
-        from valuenetwork.api.types.NotificationSetting import NotificationSetting
-        types.NotificationSetting = NotificationSetting
-        from valuenetwork.api.types.Agent import OrganizationClassification
-        types.OrganizationClassification = OrganizationClassification
-        from valuenetwork.api.types.AgentResourceClassification import AgentResourceClassification
-        types.AgentResourceClassification = AgentResourceClassification
+        #from valuenetwork.api.types.EconomicEvent import EconomicEvent
+        #types.EconomicEvent = EconomicEvent
+        #from valuenetwork.api.types.Commitment import Commitment
+        #types.Commitment = Commitment
+        #from valuenetwork.api.types.EconomicEvent import Fulfillment
+        #types.Fulfillment = Fulfillment
+        #from valuenetwork.api.types.Exchange import ExchangeAgreement
+        #types.ExchangeAgreement = ExchangeAgreement
+        #from valuenetwork.api.types.Exchange import Transfer
+        #types.Transfer = Transfer
+        #from valuenetwork.api.types.Place import Place
+        #types.Place = Place
+        #from valuenetwork.api.types.NotificationSetting import NotificationSetting
+        #types.NotificationSetting = NotificationSetting
+        #from valuenetwork.api.types.Agent import OrganizationClassification
+        #types.OrganizationClassification = OrganizationClassification
+        #from valuenetwork.api.types.AgentResourceClassification import AgentResourceClassification
+        #types.AgentResourceClassification = AgentResourceClassification
         super(ApiTypesAppConfig, self).ready()

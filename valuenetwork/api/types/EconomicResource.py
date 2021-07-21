@@ -1,14 +1,14 @@
 #
 # EconomicResource:
 #
-
+"""
 import graphene
 from graphene_django.types import DjangoObjectType
 
-import valuenetwork.api.types as types
-from valuenetwork.valueaccounting.models import EconomicResource as EconomicResourceProxy, EconomicResourceType, Facet as FacetProxy, FacetValue as FacetValueProxy
-from valuenetwork.api.models import QuantityValue as QuantityValueProxy, formatAgentList
-from valuenetwork.api.types.QuantityValue import Unit, QuantityValue
+import api.types as types
+from vocab.models import EconomicResource as EconomicResourceProxy, Measure as MeasureProxy, ResourceSpecification #, Facet as FacetProxy, FacetValue as FacetValueProxy
+from api.models import formatAgentList
+from api.types.Measure import Unit, Measure
 
 
 class EconomicResourceCategory(graphene.Enum):
@@ -46,60 +46,73 @@ class FacetValue(DjangoObjectType):
         only_fields = ('id', 'value', 'description')
 
 
-class ResourceClassification(DjangoObjectType):
+class ResourceSpecification(DjangoObjectType):
     image = graphene.String(source='image')
     note = graphene.String(source='note')
-    category = graphene.String(source='category')
-    process_category = graphene.String(source='process_category')
+    resourceClassifiedAs = graphene.String(source='resource_classified_as')
+    #process_category = graphene.String(source='process_category')
+    default_unit_of_resource = graphene.Field(Unit)
+    default_unit_of_effort = graphene.Field(Unit)
 
     class Meta:
-        model = EconomicResourceType
+        model = ResourceSpecification
         only_fields = ('id', 'name', 'unit')
 
-    classification_resources = graphene.List(lambda: EconomicResource)
+    #classification_resources = graphene.List(lambda: EconomicResource)
 
     #classification_facet_values = graphene.List(lambda: FacetValue)
 
-    def resolve_classification_resources(self, args, context, info):
-        return self.resources.all()
+    #def resolve_classification_resources(self, args, context, info):
+    #    return self.resources.all()
 
     #def resolve_classification_facet_values(self, args, context, info):
     #    return self.facets.all() #TODO in process, not working yet
 
 class EconomicResource(DjangoObjectType):
-    resource_classified_as = graphene.Field(ResourceClassification)
+    name = graphene.String(source='name')
+    #conforms_to = graphene.Field(ResourceSpecification)
+    classified_as = graphene.String(source='classified_as')
+    conforms_to = graphene.Field(ResourceSpecification)
     tracking_identifier = graphene.String(source='tracking_identifier')
+    #lot = 
     image = graphene.String(source='image')
-    current_quantity = graphene.Field(QuantityValue)
+    accounting_quantity = graphene.Field(Measure)
+    onhand_quantity = graphene.Field(Measure)
     note = graphene.String(source='note')
-    category = graphene.String(source='category')
-    current_location = graphene.Field(lambda: types.Place)
+    #current_location = graphene.Field(lambda: types.Place)
+    unit_of_effort = graphene.Field(Unit)
+    #primary_accountable = graphene.Field(lambda: types.Agent)
+    #contained_in = graphene.Field(lambda: types.EconomicResource)
     created_date = graphene.String(source='created_date')
 
     class Meta:
         model = EconomicResourceProxy
-        only_fields = ('id', 'url')
+        only_fields = ('id')
 
-    transfers = graphene.List(lambda: types.Transfer)
+    #transfers = graphene.List(lambda: types.Transfer)
 
-    resource_contacts = graphene.List(lambda: types.Agent)
+    #resource_contacts = graphene.List(lambda: types.Agent)
     
-    owners = graphene.List(lambda: types.Agent)
+    #owners = graphene.List(lambda: types.Agent)
 
-    def resolve_current_quantity(self, args, *rargs):
-        return QuantityValueProxy(numeric_value=self.quantity, unit=self.unit)
+    def resolve_accounting_quantity(self, args, *rargs):
+        return self.accounting_quantity #QuantityValueProxy(numeric_value=self.quantity, unit=self.unit)
 
-    def resolve_resource_classified_as(self, args, *rargs):
-        return self.resource_type
+    def resolve_onhand_quantity(self, args, *rargs):
+        return self.onhand_quantity #QuantityValueProxy(numeric_value=self.quantity, unit=self.unit)
 
-    def resolve_current_location(self, args, *rargs):
-        return self.current_location
+    def resolve_conforms_to(self, args, *rargs):
+        return self.conforms_to
 
-    def resolve_transfers(self, args, context, info):
-        return self.transfers()
+    #def resolve_current_location(self, args, *rargs):
+    #    return self.current_location
 
-    def resolve_resource_contacts(self, args, context, info):
-        return formatAgentList(self.all_contact_agents())
+    #def resolve_transfers(self, args, context, info):
+    #    return self.transfers()
 
-    def resolve_owners(self, args, context, info):
-        return formatAgentList(self.owners())
+    #def resolve_resource_contacts(self, args, context, info):
+    #    return formatAgentList(self.all_contact_agents())
+
+    #def resolve_owners(self, args, context, info):
+    #    return formatAgentList(self.owners())
+"""

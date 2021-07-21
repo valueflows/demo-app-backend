@@ -1,26 +1,27 @@
 #
-# Plan: A set of one or more connected processes. (Note there is currently no corresponding ValueFlows concept, although something like it will probably need to be added.  But for now, this is not VF vocabulary compliant.)
+# Plan: A set of one or more connected processes. 
 #
 
 import graphene
 from graphene_django.types import DjangoObjectType
 import valuenetwork.api.types as types
-from valuenetwork.api.types.EconomicEvent import Action
-from valuenetwork.valueaccounting.models import Order
+from valuenetwork.valueaccounting.models import VocabPlan, VocabProcess
 from valuenetwork.api.models import formatAgent, formatAgentList
 
 
 class Plan(DjangoObjectType):
-    planned_on = graphene.String(source='planned')
+    #created = graphene.String(source='created')
     due = graphene.String(source='due')
     note = graphene.String(source='note')
-    name = graphene.String(source='plan_name')
+    name = graphene.String(source='name')
 
     class Meta:
-        model = Order
+        model = VocabPlan
         only_fields = ('id')
 
-
+    processes = graphene.List(lambda: types.Process)
+    
+    """
     created_by = graphene.Field(lambda: types.Agent)
 
     scope = graphene.List(lambda: types.Agent)
@@ -48,19 +49,19 @@ class Plan(DjangoObjectType):
 
     def resolve_created_by(self, args, *rargs):
         return formatAgent(self.created_by_agent)
-
-    def resolve_plan_processes(self, args, context, info):
-        year = args.get('year', None)
-        month = args.get('month', None)
-        if year and month:
-            procs = self.all_processes()
-            worked_procs = []
-            for proc in procs:
-                if proc.worked_in_month(year=year,month=month):
-                    worked_procs.append(proc)
-            return worked_procs
-        return self.all_processes()
-
+    """
+    def resolve_processes(self, args, context, info):
+        #year = args.get('year', None)
+        #month = args.get('month', None)
+        #if year and month:
+        #    procs = self.all_processes()
+        #    worked_procs = []
+        #    for proc in procs:
+        #        if proc.worked_in_month(year=year,month=month):
+        #            worked_procs.append(proc)
+        #    return worked_procs
+        return self.processes.all()
+    """
     def resolve_working_agents(self, args, context, info):
         return formatAgentList(self.all_working_agents())
 
@@ -82,3 +83,4 @@ class Plan(DjangoObjectType):
 
     def resolve_is_deletable(self, args, *rargs):
         return self.is_deletable()
+    """

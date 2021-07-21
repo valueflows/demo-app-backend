@@ -167,7 +167,7 @@ REST_FRAMEWORK = {
 
 # valueaccounting settings
 # Set this with your specific data in local_settings.py
-MAIN_ORGANIZATION = "FreedomCoop"
+MAIN_ORGANIZATION = "Demo"
 USE_WORK_NOW = True
 SUBSTITUTABLE_DEFAULT = True
 MAP_LATITUDE = 45.5601062

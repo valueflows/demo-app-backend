@@ -5,11 +5,13 @@
 import graphene
 from graphene_django.types import DjangoObjectType
 import valuenetwork.api.types as types
-from valuenetwork.valueaccounting.models import AgentAssociation, AgentAssociationType
+#from api.types.Agent import Agent
+#from api.types.AgentRelationship import AgentRelationship, AgentRelationshipRole
+from valuenetwork.valueaccounting.models import VocabAgentRelationship, VocabAgentRelationshipRole
 from valuenetwork.api.models import formatAgent, Person, Organization
 
 
-class AgentRelationshipCategory(graphene.Enum):
+class RoleBehavior(graphene.Enum):
     NONE = None
     MEMBER = "member"
     PART = "part"
@@ -19,24 +21,25 @@ class AgentRelationshipCategory(graphene.Enum):
 
 
 class AgentRelationshipRole(DjangoObjectType):
-    category = graphene.Field(lambda: AgentRelationshipCategory)
+    role_behavior = graphene.Field(lambda: RoleBehavior)
 
     class Meta:
-        model = AgentAssociationType
-        only_fields = ('id', 'label', 'inverse_label')
+        model = VocabAgentRelationshipRole
+        only_fields = ('id', 'role_label', 'inverse_role_label')
 
-    def resolve_category(self, args, *rargs):
-        return self.category
+    def resolve_role_behavior(self, args, *rargs):
+        return self.role_behavior
 
 
 class AgentRelationship(DjangoObjectType):
     subject = graphene.Field(lambda: types.Agent)
     object = graphene.Field(lambda: types.Agent)
-    relationship = graphene.Field(lambda: AgentRelationshipRole)
+    relationship = graphene.Field(AgentRelationshipRole)
     note = graphene.String(source='description')
+    in_scope_of = graphene.Field(lambda: types.Agent)
 
     class Meta:
-        model = AgentAssociation
+        model = VocabAgentRelationship
         only_fields = ('id')
 
     def resolve_subject(self, args, *rargs):
@@ -47,3 +50,7 @@ class AgentRelationship(DjangoObjectType):
 
     def resolve_relationship(self, args, *rargs):
         return self.relationship
+        
+    def resolve_in_scope_of(self, args, *rargs):
+        return formatAgent(self.in_scope_of)
+

@@ -19,6 +19,330 @@ from django.conf import settings
 from faircoin import utils as faircoin_utils
 from easy_thumbnails.fields import ThumbnailerImageField
 
+from django.utils.encoding import python_2_unicode_compatible #vocab
+
+'''
+The models on top are for the demo app based on the vocabulator.  Using valuenetwork as a base to get graphene working for the demo app.  Model names will all start with Vocab, to help distinguish from the old code, which might be around for a while here.
+'''
+
+class VocabBase(models.Model):
+    created_date = models.DateField(auto_now_add=True, blank=True, null=True, editable=False)
+    changed_date = models.DateField(auto_now=True, blank=True, null=True, editable=False)
+    
+    class Meta:
+        abstract = True
+
+
+
+AGENT_SUBCLASS_OPTIONS = (
+    ('Person', _('Person')),
+    ('Organization', _('Organization')),
+)
+
+
+class VocabAgentManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
+@python_2_unicode_compatible
+class VocabAgent(VocabBase):
+    """
+    vf:Agent: 
+    https://valueflows.gitbooks.io/valueflows/content/introduction/agents.html
+    https://valueflows.gitbooks.io/valueflows/content/specification/generated-spec.html#d4e666
+    """
+    name = models.CharField(_('name'), max_length=255, unique=True)
+    url = models.URLField(_('url'), blank=True)
+    note = models.TextField(_('note'), blank=True, null=True)
+    agent_subclass =  models.CharField(_('subclass'),
+        max_length=16, choices=AGENT_SUBCLASS_OPTIONS,
+        default='Person')
+    image = models.URLField(_('image'), blank=True, null=True)
+    # primary_location = # TODO
+
+    objects = VocabAgentManager()
+        
+    created_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('created by'), related_name='vocab_agents_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='vocab_agents_changed' )
+
+    
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+        
+    def natural_key(self):
+        return (self.name)
+
+
+        
+class VocabAgentRelationshipRoleManager(models.Manager):
+    def get_by_natural_key(self, role_label):
+        return self.get(role_label=role_label)
+
+        
+@python_2_unicode_compatible        
+class VocabAgentRelationshipRole(VocabBase):
+    """
+    vf:AgentRelationshipRole:
+    not yet defined
+    """
+    role_label = models.CharField(_('label'), max_length=255) # TODO was label
+    inverse_role_label = models.CharField(_('inverse label'), max_length=255, # TODO was inverse_label
+        blank=True, null=True,)
+    note = models.TextField(_('note'), blank=True, null=True)
+    
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='roles_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='roles_changed' )
+        
+    objects = VocabAgentRelationshipRoleManager()
+
+    
+    class Meta:
+        ordering = ('role_label',)
+
+    def __str__(self):
+        return self.role_label
+        
+    def natural_key(self):
+        return (self.role_label)
+        
+    
+@python_2_unicode_compatible
+class VocabAgentRelationship(VocabBase):
+    """
+    vf:Relationship:
+    https://valueflows.gitbooks.io/valueflows/content/specification/generated-spec.html#d4e840    
+    """
+    subject = models.ForeignKey(VocabAgent,
+        verbose_name=_('subject'), related_name="subject_relationships")
+    relationship = models.ForeignKey(VocabAgentRelationshipRole,
+        verbose_name=_('relationship'), related_name="relationships")
+    object = models.ForeignKey(VocabAgent,
+        verbose_name=_('object'), related_name="object_relationships")    
+    in_scope_of = models.ForeignKey(VocabAgent,
+        blank=True, null=True,
+        verbose_name=_('scope'), related_name="relationships") # TODO new name, used to be context
+        
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='relationships_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='relationships_changed' )
+
+        
+    class Meta:
+        ordering = ('subject',)
+
+    def __str__(self):
+        return ' '.join([
+            self.subject.name,
+            self.relationship.role_label,
+            self.object.name,
+        ])
+   
+  
+@python_2_unicode_compatible
+class VocabUnit(VocabBase):
+    """
+    om2:Unit:
+    http://qudt.org/doc/2017/DOC_VOCAB-UNITS-BASE.html TODO
+    http://qudt.org/doc/2017/DOC_SCHEMA-QUDT-v2.0.html#Classes TODO
+    """
+    #quantity_kind = models.ForeignKey(QuantityKind, TODO
+    #    verbose_name=_('quantity kind'), related_name="units")
+    label = models.CharField(_('label'), max_length=255) # TODO was name
+    symbol = models.CharField(_('symbol'), max_length=255, blank=True, null=True)
+    
+    class Meta:
+        ordering = ('label',)
+    
+    def __str__(self):
+        return self.label 
+
+        
+@python_2_unicode_compatible
+class VocabMeasure(models.Model): # TODO was QuantityValue
+    """
+    om2:Measure:
+    http://qudt.org/doc/2017/DOC_SCHEMA-QUDT-v2.0.html#Classes TODO
+    """
+    has_numerical_value = models.DecimalField(_('numerical value'), max_digits=11, decimal_places=4) #TODO: embiggen? was numeric_value
+    has_unit = models.ForeignKey(VocabUnit, # TODO was unit
+        verbose_name=_('unit'), related_name="measures")
+        
+    class Meta:
+        ordering = ('has_unit',)
+        
+    def __str__(self):
+        return ' '.join([
+            str(self.has_numerical_value),
+            self.has_unit.label,
+        ])
+    
+    
+@python_2_unicode_compatible
+class VocabPlan(VocabBase):
+    name = models.CharField(_('name'), max_length=255)
+    note = models.TextField(_('note'), blank=True, null=True)
+    due = models.DateTimeField(_('due'), blank=True, null=True)
+    #refinementOf: Scenario
+    
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='plans_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='plans_changed' )
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+    
+    def label(self):
+        return self.name
+        
+    def class_name(self):
+        return "Plan"
+    
+
+@python_2_unicode_compatible
+class VocabProcess(VocabBase):
+    """
+    vf:Process:
+    https://valueflows.gitbooks.io/valueflows/content/introduction/processes.html
+    https://valueflows.gitbooks.io/valueflows/content/specification/generated-spec.html#d4e829
+    """
+    name = models.CharField(_('name'), max_length=255)
+    url = models.URLField(_('url'), blank=True)
+    note = models.TextField(_('note'), blank=True, null=True)
+    has_beginning = models.DateTimeField(_('beginning'), blank=True, null=True) # TODO was planned_start
+    has_end = models.DateTimeField(_('end'), blank=True, null=True) # TODO was planned_duration
+    finished = models.BooleanField(_('finished'), default=False) # TODO was is_finished
+    classified_as = models.TextField(_('classified as'), blank=True, null=True)
+    plan = models.ForeignKey(VocabPlan,
+        blank=True, null=True,
+        verbose_name=_('plan'), related_name="processes")
+    in_scope_of = models.ForeignKey(VocabAgent,
+        blank=True, null=True,
+        verbose_name=_('scope'), related_name="processes")
+    
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='vocab_processes_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='vocab_processes_changed' )
+
+    
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+    
+    def label(self):
+        return self.name
+        
+    def class_name(self):
+        return "Process"
+        
+    def output_events(self):
+        #return self.events.filter(action__resource_effect="increment")
+        return self.outputs_of.all()
+        
+    def input_events(self):
+        #return self.events.exclude(action__resource_effect="increment")
+        return self.inputs_of.all()
+        
+    def next(self):
+        return self.output_events()
+        
+    def preds(self):
+        return self.input_events()
+        
+    def process_resource_next(self):
+        return [evt.resource_inventoried_as for evt in self.output_events() if evt.resource_inventoried_as]
+        
+    def process_resource_preds(self):
+        return [evt.resource_inventoried_as for evt in self.input_events() if evt.resource_inventoried_as]
+        
+    def previous_processes(self):
+        inputs = self.input_events()
+        processes = []
+        for inp in inputs:
+            resource = inp.resource_inventoried_as
+            if resource:
+                events = resource.where_from()
+                processes.extend([e.process() for e in events])
+        processes = list(set(processes))
+        return processes
+
+    def next_processes(self):
+        outputs = self.output_events()
+        processes = []
+        for output in outputs:
+            resource = output.resource_inventoried_as
+            if resource:
+                events = resource.where_to()
+                processes.extend([e.process() for e in events])
+        processes = list(set(processes))
+        return processes
+        
+    def process_flow(self, visited):
+        #starting with self
+        visited.add(self)
+        flows = [self,]
+        self.process_flow_dfs(flows, visited)
+        return flows
+        
+    def process_flow_dfs(self, flows, visited):
+        #import pdb; pdb.set_trace()
+        next = self.next_processes()
+        for nxt in next:
+            if nxt not in visited:
+                visited.add(nxt)
+                flows.append(nxt)
+                nxt.process_flow_dfs(flows, visited)
+            
+    def process_resource_flow(self, visited):
+        #starting with self
+        visited.add(self)
+        flows = [self,]
+        self.process_resource_flow_dfs(flows, visited)
+        return flows
+        
+    def process_resource_flow_dfs(self, flows, visited):
+        resources = [evt.resource_inventoried_as for evt in self.output_events() if evt.resource_inventoried_as]
+        for resource in resources:
+            if resource not in visited:
+                visited.add(resource)
+                flows.append(resource)
+                processes = [evt.process() for evt in resource.where_to() if evt.process()]
+                for process in processes:
+                    if process not in visited:
+                        visited.add(process)
+                        flows.append(process)
+                        process.process_resource_flow_dfs(flows, visited)
+                        
+
+   
+   
+########### OLD OLD OLD OLD ################################################
+
 """Models based on REA
 
 These models are based on the Bill McCarthy's Resource-Event-Agent accounting model:

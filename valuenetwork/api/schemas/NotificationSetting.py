@@ -1,6 +1,6 @@
 #
 # Graphene schema for exposing Notification models
-
+"""
 import graphene
 
 from pinax.notifications.models import NoticeSetting, NoticeType
@@ -123,3 +123,4 @@ class UpdateNotificationSetting(AuthedMutation):
                 raise PermissionDenied('User not authorized to perform this action.')
 
         return UpdateNotificationSetting(notification_setting=notification_setting)
+"""

@@ -1,7 +1,7 @@
 #
 # Graphene schema for exposing ProcessClassification model
 #
-
+"""
 import graphene
 
 from valuenetwork.valueaccounting.models import ProcessType
@@ -27,3 +27,4 @@ class Query(graphene.AbstractType):
 
     def resolve_all_process_classifications(self, args, context, info):
         return ProcessType.objects.all()
+"""

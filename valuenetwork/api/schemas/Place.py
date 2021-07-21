@@ -1,7 +1,7 @@
 #
 # Graphene schema for exposing Place model (also known as Location)
 #
-
+"""
 import graphene
 from valuenetwork.valueaccounting.models import Location
 from valuenetwork.api.types.Place import Place
@@ -73,4 +73,5 @@ class CreatePlace(AuthedMutation):
             raise PermissionDenied('User not authorized to perform this action.')
 
         return CreatePlace(place=place)
+"""
 

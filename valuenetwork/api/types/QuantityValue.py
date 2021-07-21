@@ -1,7 +1,7 @@
 #
 # QuantityValue: A numeric amount and a unit, bundled.
 #
-
+"""
 import graphene
 from graphene_django.types import DjangoObjectType
 from valuenetwork.api.models import QuantityValue as QuantityValueProxy
@@ -26,3 +26,4 @@ class QuantityValue(DjangoObjectType):
 
     def resolve_unit(self, args, *rargs):
         return self.unit
+"""

@@ -4,8 +4,8 @@
 
 import graphene
 
-from valuenetwork.api.types.QuantityValue import Unit
-from valuenetwork.valueaccounting.models import Unit as UnitProxy, AgentUser
+from valuenetwork.api.types.Measure import Unit
+from valuenetwork.valueaccounting.models import VocabUnit #, AgentUser
 from six import with_metaclass
 from django.contrib.auth.models import User
 from .Auth import AuthedInputMeta, AuthedMutation
@@ -17,22 +17,22 @@ class Query(graphene.AbstractType):
     unit = graphene.Field(Unit,
                           id=graphene.Int())
 
-    all_units = graphene.List(Unit)
+    units = graphene.List(Unit)
 
     def resolve_unit(self, args, *rargs):
         id = args.get('id')
         if id is not None:
-            unit = UnitProxy.objects.get(pk=id)
+            unit = VocabUnit.objects.get(pk=id)
             if unit:
                 return unit
         return None
 
     # load all items
 
-    def resolve_all_units(self, args, context, info):
-        return UnitProxy.objects.all()
+    def resolve_units(self, args, context, info):
+        return VocabUnit.objects.all()
 
-
+"""
 class CreateUnit(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):
         name = graphene.String(required=True)
@@ -62,3 +62,4 @@ class CreateUnit(AuthedMutation):
            raise PermissionDenied('User not authorized to perform this action.')
 
         return CreateUnit(unit=unit)
+"""

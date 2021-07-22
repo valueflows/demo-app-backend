@@ -1,17 +1,15 @@
 #
 # Graphene schema for exposing EconomicEvent
 #
-"""
 import graphene
 import datetime
 from decimal import Decimal
 #from vocab.models import EconomicEvent as EconomicEventProxy, Commitment, EventType, EconomicAgent, Process, EconomicResourceType, EconomicResource as EconomicResourceProxy, Unit, AgentUser, Location, AgentResourceRoleType, AgentResourceRole
-from vocab.models import EconomicEvent as EconomicEventProxy, Action as ActionProxy, Agent, Process, EconomicResource as EconomicResourceProxy, Unit
-from api.types.EconomicEvent import EconomicEvent, Action
-#from valuenetwork.api.models import Fulfillment
-#from six import with_metaclass
-#from django.contrib.auth.models import User
-#from .Auth import AuthedInputMeta, AuthedMutation
+from valuenetwork.valueaccounting.models import VocabEconomicEvent, VocabAction, VocabAgent, VocabProcess, VocabEconomicResource, VocabUnit, VocabFulfillment
+from valuenetwork.api.types.EconomicEvent import EconomicEvent, Action
+from six import with_metaclass
+from django.contrib.auth.models import User
+from .Auth import AuthedInputMeta, AuthedMutation
 from django.core.exceptions import PermissionDenied, ValidationError
 
 
@@ -33,36 +31,36 @@ class Query(graphene.AbstractType):
     def resolve_economic_event(self, args, *rargs):
         id = args.get('id')
         if id is not None:
-            event = EconomicEventProxy.objects.get(pk=id)
+            event = VocabEconomicEvent.objects.get(pk=id)
             if event:
                 return event
         return None
 
     def resolve_economic_events(self, args, context, info):
-        return EconomicEventProxy.objects.all()
+        return VocabEconomicEvent.objects.all()
 
-    def resolve_filtered_economic_events(self, args, context, info):
-        provider_id = args.get('provider_id')
-        receiver_id = args.get('receiver_id')
-        resource_classified_as_id = args.get('resource_classified_as_id')
-        action = args.get('action')
-        start_date = args.get('start_date')
-        end_date = args.get('end_date')
-        events = EconomicEventProxy.objects.all()
-        if provider_id:
-            events = EconomicEventProxy.objects.filter(from_agent=EconomicAgent.objects.get(pk=provider_id))
-        if receiver_id:
-            events = events.filter(to_agent=EconomicAgent.objects.get(pk=receiver_id))
-        if action:
-            events = events.filter(event_type=EventType.objects.convert_action_to_event_type(action))
-        if resource_classified_as_id:
-            events = events.filter(resource_type=EconomicResourceType.objects.get(pk=resource_classified_as_id))
-        if start_date:
-            events = events.filter(event_date__gte=start_date)
-        if end_date:
-            events = events.filter(event_date__lte=end_date)
-        return events
-    """
+    #def resolve_filtered_economic_events(self, args, context, info):
+    #    provider_id = args.get('provider_id')
+    #    receiver_id = args.get('receiver_id')
+    #    resource_classified_as_id = args.get('resource_classified_as_id')
+    #    action = args.get('action')
+    #    start_date = args.get('start_date')
+    #    end_date = args.get('end_date')
+    #    events = EconomicEventProxy.objects.all()
+    #    if provider_id:
+    #        events = EconomicEventProxy.objects.filter(from_agent=EconomicAgent.objects.get(pk=provider_id))
+    #    if receiver_id:
+    #        events = events.filter(to_agent=EconomicAgent.objects.get(pk=receiver_id))
+    #    if action:
+    #        events = events.filter(event_type=EventType.objects.convert_action_to_event_type(action))
+    #    if resource_classified_as_id:
+    #        events = events.filter(resource_type=EconomicResourceType.objects.get(pk=resource_classified_as_id))
+    #    if start_date:
+    #        events = events.filter(event_date__gte=start_date)
+    #    if end_date:
+    #        events = events.filter(event_date__lte=end_date)
+    #    return events
+
 """
 class CreateEconomicEvent(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):

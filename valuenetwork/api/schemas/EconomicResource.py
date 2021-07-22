@@ -1,14 +1,13 @@
 #
 # Graphene schema for exposing EconomicResource model
 #
-"""
+
 import graphene
-#from vocab.models import EconomicResource as EconomicResourceProxy, EconomicResourceType, AgentUser, Location
-from vocab.models import EconomicResource as EconomicResourceProxy
-from api.types.EconomicResource import EconomicResource
-#from six import with_metaclass
-#from django.contrib.auth.models import User
-#from .Auth import AuthedInputMeta, AuthedMutation
+from valuenetwork.valueaccounting.models import VocabEconomicResource, VocabResourceSpecification, VocabAgentUser #, Location
+from valuenetwork.api.types.EconomicResource import EconomicResource
+from six import with_metaclass
+from django.contrib.auth.models import User
+from .Auth import AuthedInputMeta, AuthedMutation
 from django.core.exceptions import PermissionDenied, ValidationError
 
 
@@ -30,14 +29,14 @@ class Query(graphene.AbstractType):
     def resolve_economic_resource(self, args, *rargs):
         id = args.get('id')
         if id is not None:
-            resource = EconomicResourceProxy.objects.get(pk=id)
+            resource = VocabEconomicResource.objects.get(pk=id)
             if resource:
                 #resource.current_quantity = self._current_quantity(quantity=resource.quantity, unit=resource.unit)
                 return resource
         return None   
 
     def resolve_economic_resources(self, args, context, info):
-        resources = EconomicResourceProxy.objects.all()
+        resources = VocabEconomicResource.objects.all()
         #for resource in resources:
             #resource.current_quantity = self._current_quantity(quantity=resource.quantity, unit=resource.unit)
         return resources
@@ -48,7 +47,7 @@ class Query(graphene.AbstractType):
     #    if search_string == "":
     #        raise ValidationError("A search string is required.")
     #    return EconomicResourceProxy.objects.search(agent_id=agent_id, search_string=search_string)
-"""
+
 """
 class CreateEconomicResource(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):

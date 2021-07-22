@@ -1,12 +1,12 @@
 #
 # Graphene schema for exposing ResourceSpecification model
 #
-"""
+
 import graphene
 
-from vocab.models import ResourceSpecification as ResourceSpecificationProxy, Unit #, Facet as FacetProxy, FacetValue as FacetValueProxy, Unit, AgentUser
-from api.types.EconomicResource import ResourceSpecification #, EconomicResourceProcessCategory, Facet, FacetValue
-from api.types.EconomicEvent import Action
+from valuenetwork.valueaccounting.models import VocabResourceSpecification, VocabUnit, VocabAgentUser #, Facet as FacetProxy, FacetValue as FacetValueProxy
+from valuenetwork.api.types.EconomicResource import ResourceSpecification #, EconomicResourceProcessCategory, Facet, FacetValue
+from valuenetwork.api.types.EconomicEvent import Action
 from django.db.models import Q
 from six import with_metaclass
 from django.contrib.auth.models import User
@@ -45,18 +45,19 @@ class Query(graphene.AbstractType):
     def resolve_resource_specification(self, args, *rargs):
         id = args.get('id')
         if id is not None:
-            rt = ResourceSpecificationProxy.objects.get(pk=id)
+            rt = VocabResourceSpecification.objects.get(pk=id)
             if rt:
                 return rt
         return None
 
-    def resolve_resource_classifications(self, args, context, info):
-        return ResourceSpecificationProxy.objects.all()
+    def resolve_resource_specifications(self, args, context, info):
+        return VocabResourceSpecification.objects.all()
 
     #def resolve_resource_classifications_by_process_category(self, args, context, info):
     #    cat = args.get('category')
     #    return EconomicResourceType.objects.filter(behavior=cat)
 
+    """
     def resolve_resource_classifications_by_action(self, args, context, info):
         action = args.get('action')
         if action == Action.WORK:
@@ -90,8 +91,9 @@ class Query(graphene.AbstractType):
 
     def resolve_recipes(self, args, context, info):
         return EconomicResourceType.objects.resource_types_with_recipes()
-
+    """
    
+"""
 class CreateResourceSpecification(AuthedMutation):
     class Input(with_metaclass(AuthedInputMeta)):
         name = graphene.String(required=True)
@@ -140,5 +142,5 @@ class CreateResourceSpecification(AuthedMutation):
            raise PermissionDenied('User not authorized to perform this action.')
 
         return CreateResourceClassification(resourceClassification=resourceClassification)
-    """
+"""
     

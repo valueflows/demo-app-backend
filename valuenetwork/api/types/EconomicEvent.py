@@ -1,5 +1,5 @@
 #
-# Economic Event: An inflow or outflow of an economic resource in relation to a process and/or exchange. This could reflect a change in the quantity of a EconomicResource. It is also defined by its behavior in relation to the EconomicResource and a Process (consume, use, produce, etc.)" .
+# Economic Event: .
 #
 
 from django.core.exceptions import PermissionDenied
@@ -7,9 +7,10 @@ from django.core.exceptions import PermissionDenied
 import graphene
 from graphene_django.types import DjangoObjectType
 import valuenetwork.api.types as types
+from valuenetwork.api.types.Measure import Unit, Measure
+from valuenetwork.api.types.EconomicResource import ResourceSpecification, EconomicResource
 from valuenetwork.api.schemas.Auth import _authUser
-from api.types.Measure import Unit, Measure
-from valuenetwork.valueaccounting.models import VocabEconomicEvent, VocabEconomicResource, VocabMeasure, VocabAction, VocabAgentUser, VocabFulfillment
+from valuenetwork.valueaccounting.models import VocabEconomicEvent, VocabEconomicResource, VocabMeasure, VocabAction, VocabAgentUser, VocabFulfillment, VocabUnit
 from valuenetwork.api.models import formatAgent, Person, Organization
 
 
@@ -19,11 +20,14 @@ class Action(DjangoObjectType):
     resource_effect = graphene.String(source='resource_effect')
     onhand_effect = graphene.String(source='onhand_effect')
     input_output = graphene.String(source='input_output')
-    pairs_with = graphene.String(source='pairs_with')
+    #pairs_with = graphene.Field(lambda: 'self')
     
     class Meta:
         model = VocabAction
         only_fields = ('id')    
+
+    def resolve_pairs_with(self, args, *rargs):
+        return self.pairs_with
 
 
 class EconomicEvent(DjangoObjectType):
@@ -33,10 +37,10 @@ class EconomicEvent(DjangoObjectType):
     provider = graphene.Field(lambda: types.Agent)
     receiver = graphene.Field(lambda: types.Agent)
     in_scope_of = graphene.Field(lambda: types.Agent)
-    resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
-    to_resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
-    resource_quantity = graphene.Field(lambda: types.Measure)
-    effort_quantity = graphene.Field(lambda: types.Measure)
+    resource_inventoried_as = graphene.Field(lambda: EconomicResource)
+    to_resource_inventoried_as = graphene.Field(lambda: EconomicResource)
+    resource_quantity = graphene.Field(Measure)
+    effort_quantity = graphene.Field(Measure)
     has_point_in_time = graphene.String(source='has_point_in_time')
     has_beginning = graphene.String(source='has_beginning')
     has_end = graphene.String(source='has_end')

@@ -1,9 +1,9 @@
 #
 # Graphene schema for exposing Fulfillment
 #
-"""
+
 import graphene
-from vocab.models import Fulfillment as FulfillmentProxy
+from valuenetwork.valueaccounting.models import VocabFulfillment
 from valuenetwork.api.types.EconomicEvent import Fulfillment
 
 
@@ -19,8 +19,8 @@ class Query(graphene.AbstractType):
     def resolve_fulfillment(self, args, *rargs):
         id = args.get('id')
         if id is not None:
-            ff = FulfillmentProxy.objects.get(pk=id)
+            ff = VocabFulfillment.objects.get(pk=id)
             if ff:
                 return ff
         return None
-"""
+

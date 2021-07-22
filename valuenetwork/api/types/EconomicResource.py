@@ -1,16 +1,16 @@
 #
 # EconomicResource:
 #
-"""
+
 import graphene
 from graphene_django.types import DjangoObjectType
 
-import api.types as types
-from vocab.models import EconomicResource as EconomicResourceProxy, Measure as MeasureProxy, ResourceSpecification #, Facet as FacetProxy, FacetValue as FacetValueProxy
-from api.models import formatAgentList
-from api.types.Measure import Unit, Measure
+import valuenetwork.api.types as types
+from valuenetwork.valueaccounting.models import VocabUnit, VocabMeasure, VocabResourceSpecification, VocabEconomicResource #, Facet as FacetProxy, FacetValue as FacetValueProxy
+from valuenetwork.api.models import formatAgentList
+from valuenetwork.api.types.Measure import Unit, Measure
 
-
+"""
 class EconomicResourceCategory(graphene.Enum):
     NONE = None
     CURRENCY = "currency"
@@ -45,7 +45,7 @@ class FacetValue(DjangoObjectType):
         model = FacetValueProxy
         only_fields = ('id', 'value', 'description')
 
-
+"""
 class ResourceSpecification(DjangoObjectType):
     image = graphene.String(source='image')
     note = graphene.String(source='note')
@@ -55,7 +55,7 @@ class ResourceSpecification(DjangoObjectType):
     default_unit_of_effort = graphene.Field(Unit)
 
     class Meta:
-        model = ResourceSpecification
+        model = VocabResourceSpecification
         only_fields = ('id', 'name', 'unit')
 
     #classification_resources = graphene.List(lambda: EconomicResource)
@@ -68,9 +68,9 @@ class ResourceSpecification(DjangoObjectType):
     #def resolve_classification_facet_values(self, args, context, info):
     #    return self.facets.all() #TODO in process, not working yet
 
+
 class EconomicResource(DjangoObjectType):
     name = graphene.String(source='name')
-    #conforms_to = graphene.Field(ResourceSpecification)
     classified_as = graphene.String(source='classified_as')
     conforms_to = graphene.Field(ResourceSpecification)
     tracking_identifier = graphene.String(source='tracking_identifier')
@@ -81,12 +81,12 @@ class EconomicResource(DjangoObjectType):
     note = graphene.String(source='note')
     #current_location = graphene.Field(lambda: types.Place)
     unit_of_effort = graphene.Field(Unit)
-    #primary_accountable = graphene.Field(lambda: types.Agent)
+    primary_accountable = graphene.Field(lambda: types.Agent)
     #contained_in = graphene.Field(lambda: types.EconomicResource)
-    created_date = graphene.String(source='created_date')
+    #created_date = graphene.String(source='created_date')
 
     class Meta:
-        model = EconomicResourceProxy
+        model = VocabEconomicResource
         only_fields = ('id')
 
     #transfers = graphene.List(lambda: types.Transfer)
@@ -104,6 +104,15 @@ class EconomicResource(DjangoObjectType):
     def resolve_conforms_to(self, args, *rargs):
         return self.conforms_to
 
+    def resolve_unit_of_effort(self, args, *rargs):
+        return self.unit_of_effort
+
+    def resolve_primary_accountable(self, args, *rargs):
+        return self.primary_accountable
+
+    #def resolve_contained_in(self, args, *rargs):
+    #    return self.contained_in
+
     #def resolve_current_location(self, args, *rargs):
     #    return self.current_location
 
@@ -115,4 +124,4 @@ class EconomicResource(DjangoObjectType):
 
     #def resolve_owners(self, args, context, info):
     #    return formatAgentList(self.owners())
-"""
+

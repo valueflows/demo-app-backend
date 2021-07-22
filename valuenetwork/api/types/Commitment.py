@@ -12,24 +12,26 @@ from django.core.exceptions import PermissionDenied
 from graphene_django.types import DjangoObjectType
 
 import valuenetwork.api.types as types
-#from valuenetwork.api.types.Measure import Unit, Measure
+from valuenetwork.api.types.Measure import Unit, Measure
+from valuenetwork.api.types.EconomicResource import ResourceSpecification, EconomicResource
+from valuenetwork.api.types.EconomicEvent import Action
 from valuenetwork.api.schemas.Auth import _authUser
 from valuenetwork.valueaccounting.models import VocabCommitment, VocabMeasure, VocabAgentUser
 from valuenetwork.api.models import formatAgent, Person, Organization
 
 
 class Commitment(DjangoObjectType):
-    action = graphene.String(source='action')
+    action = graphene.Field(Action)
     input_of = graphene.Field(lambda: types.Process)
     output_of = graphene.Field(lambda: types.Process)
     provider = graphene.Field(lambda: types.Agent)
     receiver = graphene.Field(lambda: types.Agent)
     in_scope_of = graphene.Field(lambda: types.Agent)
-    resource_conforms_to = graphene.Field(lambda: types.ResourceSpecification)
+    resource_conforms_to = graphene.Field(lambda: ResourceSpecification)
     resource_classified_as = graphene.String(source='resource_classified_as')
-    resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
-    resource_quantity = graphene.Field(lambda: types.Measure)
-    effort_quantity = graphene.Field(lambda: types.Measure)
+    resource_inventoried_as = graphene.Field(lambda: EconomicResource)
+    resource_quantity = graphene.Field(Measure)
+    effort_quantity = graphene.Field(Measure)
     created = graphene.String(source='created')
     has_beginning = graphene.String(source='has_beginning')
     has_end = graphene.String(source='has_end')
@@ -62,6 +64,9 @@ class Commitment(DjangoObjectType):
     #def resolve_process(self, args, *rargs):
     #    return self.process
 
+    def resolve_action(self, args, *rargs):
+        return self.action
+
     def resolve_input_of(self, args, *rargs):
         return self.input_of
 
@@ -77,8 +82,8 @@ class Commitment(DjangoObjectType):
     def resolve_in_scope_of(self, args, *rargs):
         return formatAgent(self.in_scope_of)
 
-    def resolve_involves(self, args, *rargs):
-        return self.involves
+    def resolve_resource_inventoried_as(self, args, *rargs):
+        return self.resource_inventoried_as
 
     def resolve_resource_classified_as(self, args, *rargs):
         return self.resource_classified_as
@@ -89,49 +94,49 @@ class Commitment(DjangoObjectType):
     def resolve_effort_quantity(self, args, *rargs):
         return self.effort_quantity
 
-    def resolve_plan(self, args, *rargs):
-        return self.independent_demand
+    #def resolve_plan(self, args, *rargs):
+    #    return self.independent_demand
 
-    def resolve_for_plan_deliverable(self, args, *rargs):
-        return self.order_item
+    #def resolve_for_plan_deliverable(self, args, *rargs):
+    #    return self.order_item
 
-    def resolve_fulfilled_by(self, args, context, info):
-        events = self.fulfillment_events.all()
-        request_distribution = args.get('request_distribution')
-        if request_distribution != None:
-            events = events.filter(is_contribution=request_distribution)
-        fulfillments = []
-        for event in events:
-            fulfill = FulfillmentProxy(
-                fulfilled_by=event,
-                fulfills=self,
-                fulfilled_quantity=QuantityValueProxy(numeric_value=event.quantity, unit=event.unit_of_quantity),
-                )
-            fulfillments.append(fulfill)
-        return fulfillments
+    #def resolve_fulfilled_by(self, args, context, info):
+    #    events = self.fulfillment_events.all()
+    #    request_distribution = args.get('request_distribution')
+    #    if request_distribution != None:
+    #        events = events.filter(is_contribution=request_distribution)
+    #    fulfillments = []
+    #    for event in events:
+    #        fulfill = FulfillmentProxy(
+    #            fulfilled_by=event,
+    #            fulfills=self,
+    #            fulfilled_quantity=QuantityValueProxy(numeric_value=event.quantity, unit=event.unit_of_quantity),
+    #            )
+    #        fulfillments.append(fulfill)
+    #    return fulfillments
 
-    def resolve_involved_agents(self, args, context, info):
-        involved = []
-        if self.provider:
-            involved.append(formatAgent(self.provider))
-        events = self.fulfillment_events.all()
-        for event in events:
-            if event.provider:
-                involved.append(formatAgent(event.provider))
-        return list(set(involved))
+    #def resolve_involved_agents(self, args, context, info):
+    #    involved = []
+    #    if self.provider:
+    #        involved.append(formatAgent(self.provider))
+    #    events = self.fulfillment_events.all()
+    #    for event in events:
+    #        if event.provider:
+    #            involved.append(formatAgent(event.provider))
+    #    return list(set(involved))
 
-    def resolve_is_deletable(self, args, *rargs):
-        return self.is_deletable()
+    #def resolve_is_deletable(self, args, *rargs):
+    #    return self.is_deletable()
 
-    def resolve_user_is_authorized_to_update(self, args, context, *rargs):
-        token = rargs[0].variable_values['token']
-        context.user = _authUser(token)
-        user_agent = AgentUser.objects.get(user=context.user).agent
-        return user_agent.is_authorized(object_to_mutate=self)
+    #def resolve_user_is_authorized_to_update(self, args, context, *rargs):
+    #    token = rargs[0].variable_values['token']
+    #    context.user = _authUser(token)
+    #    user_agent = AgentUser.objects.get(user=context.user).agent
+    #    return user_agent.is_authorized(object_to_mutate=self)
 
-    def resolve_user_is_authorized_to_delete(self, args, context, *rargs):
-        token = rargs[0].variable_values['token']
-        context.user = _authUser(token)
-        user_agent = AgentUser.objects.get(user=context.user).agent
-        return user_agent.is_authorized(object_to_mutate=self)
-"""
+    #def resolve_user_is_authorized_to_delete(self, args, context, *rargs):
+    #    token = rargs[0].variable_values['token']
+    #    context.user = _authUser(token)
+    #    user_agent = AgentUser.objects.get(user=context.user).agent
+    #    return user_agent.is_authorized(object_to_mutate=self)
+

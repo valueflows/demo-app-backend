@@ -9,7 +9,7 @@ from django.core.exceptions import PermissionDenied
 from graphene_django.debug import DjangoDebug
 from django.conf import settings
 
-#import valuenetwork.api.schemas.Action
+import valuenetwork.api.schemas.Action
 import valuenetwork.api.schemas.Auth
 import valuenetwork.api.schemas.Agent
 import valuenetwork.api.schemas.AgentRelationship
@@ -18,18 +18,15 @@ import valuenetwork.api.schemas.AgentRelationshipRole
 import valuenetwork.api.schemas.Organization
 ####import valuenetwork.api.schemas.OrganizationClassification
 import valuenetwork.api.schemas.Person
+import valuenetwork.api.schemas.Measure
+import valuenetwork.api.schemas.Unit
+import valuenetwork.api.schemas.ResourceSpecification
 import valuenetwork.api.schemas.EconomicResource
 import valuenetwork.api.schemas.Process
 ####import valuenetwork.api.schemas.Exchange
-####import valuenetwork.api.schemas.Transfer
 import valuenetwork.api.schemas.EconomicEvent
-####import valuenetwork.api.schemas.QuantityValue
-import valuenetwork.api.schemas.Measure
-import valuenetwork.api.schemas.Unit
-####import valuenetwork.api.schemas.ResourceClassification
-import valuenetwork.api.schemas.ResourceSpecification
 ####import valuenetwork.api.schemas.ProcessClassification
-#import valuenetwork.api.schemas.Commitment
+import valuenetwork.api.schemas.Commitment
 import valuenetwork.api.schemas.Plan
 ####import valuenetwork.api.schemas.Place
 ####import valuenetwork.api.schemas.NotificationSetting
@@ -45,14 +42,14 @@ class ViewerQuery(
     valuenetwork.api.schemas.Organization.Query,
     ####valuenetwork.api.schemas.OrganizationClassification.Query,
     valuenetwork.api.schemas.Person.Query,
+    valuenetwork.api.schemas.Unit.Query,
+    valuenetwork.api.schemas.Measure.Query,
     valuenetwork.api.schemas.EconomicResource.Query,
     valuenetwork.api.schemas.Process.Query,
     ####valuenetwork.api.schemas.Exchange.Query,
     ####valuenetwork.api.schemas.Transfer.Query,
     valuenetwork.api.schemas.EconomicEvent.Query,
     ####valuenetwork.api.schemas.QuantityValue.Query,
-    valuenetwork.api.schemas.Unit.Query,
-    valuenetwork.api.schemas.Measure.Query,
     ####valuenetwork.api.schemas.ResourceClassification.Query,
     valuenetwork.api.schemas.ResourceSpecification.Query,
     ####valuenetwork.api.schemas.ProcessClassification.Query,
@@ -126,3 +123,4 @@ class Mutation(graphene.ObjectType):
     """
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
+

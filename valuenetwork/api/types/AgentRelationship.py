@@ -35,7 +35,6 @@ class AgentRelationship(DjangoObjectType):
     subject = graphene.Field(lambda: types.Agent)
     object = graphene.Field(lambda: types.Agent)
     relationship = graphene.Field(AgentRelationshipRole)
-    note = graphene.String(source='description')
     in_scope_of = graphene.Field(lambda: types.Agent)
 
     class Meta:

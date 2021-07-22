@@ -48,6 +48,18 @@ query($token: String) {
 
 query($token: String) {
   viewer(token: $token) {
+    agents {
+      id
+      name
+      image
+      note
+      __typename
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
     agent(id:1) {
       id
       name

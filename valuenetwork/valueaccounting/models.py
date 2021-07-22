@@ -81,7 +81,15 @@ class VocabAgent(VocabBase):
         return (self.name)
 
 
-        
+
+class VocabAgentUser(models.Model):
+    agent = models.ForeignKey(VocabAgent,
+        verbose_name=_('agent'), related_name='users')
+    user = models.OneToOneField(User,
+        verbose_name=_('user'), related_name='vocab_agent')
+
+
+
 class VocabAgentRelationshipRoleManager(models.Manager):
     def get_by_natural_key(self, role_label):
         return self.get(role_label=role_label)
@@ -338,6 +346,533 @@ class VocabProcess(VocabBase):
                         flows.append(process)
                         process.process_resource_flow_dfs(flows, visited)
                         
+
+
+@python_2_unicode_compatible
+class VocabResourceSpecification(VocabBase):
+    name = models.CharField(_('name'), max_length=255)
+    image = models.URLField(_('image'), blank=True)
+    resourceClassifiedAs = models.URLField(_('classified as'), blank=True)
+    note = models.TextField(_('note'), blank=True, null=True)
+    defaultUnitOfResource = models.ForeignKey(VocabUnit, 
+        verbose_name=_('default unit of resource'), related_name="resource_specifications_resource")
+    defaultUnitOfEffort = models.ForeignKey(VocabUnit, 
+        verbose_name=_('default unit of effort'), related_name="resource_specifications_effort")
+    
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='resource_specifications_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='resource_specifications_changed' )
+
+    
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+        
+    def label(self):
+        return self.name
+    
+    def class_name(self):
+        return "ResourceSpecification"
+            
+        
+@python_2_unicode_compatible
+class VocabEconomicResource(VocabBase):
+    """
+    vf.EconomicResource:
+    https://valueflows.gitbooks.io/valueflows/content/introduction/resources.html
+    https://valueflows.gitbooks.io/valueflows/content/specification/generated-spec.html#d4e758
+    """
+    name = models.CharField(_('name'), max_length=255)
+    url = models.URLField(_('url'), blank=True)
+    tracking_identifier = models.CharField(_('tracking identifier'), max_length=255, blank=True, null=True)
+    # lot = TODO
+    accounting_quantity = models.ForeignKey(VocabMeasure,
+        blank=True, null=True,
+        verbose_name=_('accounting quantity'), related_name="resource_accounting_quantity")
+    onhand_quantity = models.ForeignKey(VocabMeasure,
+        blank=True, null=True,
+        verbose_name=_('onhand quantity'), related_name="resource_onhand_quantity")
+    #current_location = TODO 
+    conforms_to = models.ForeignKey(VocabResourceSpecification,
+       blank=True, null=True,
+       verbose_name=_('conforms to'), related_name='resources' )
+    classified_as = models.TextField(_('classified as'), blank=True, null=True)
+    image = models.URLField(_('image'), blank=True, null=True)
+    unit_of_effort = models.ForeignKey(VocabUnit,
+        blank=True, null=True,
+        verbose_name=_('unit of effort'), related_name="effort_unit_resources")
+    state = models.CharField(_('state'), max_length=255, blank=True, null=True)
+    #stage = models.ForeignKey(ProcessSpecification,
+    #    blank=True, null=True,
+    #    verbose_name=_('stage'), related_name='resources_at_stage' )
+    primary_accountable = models.ForeignKey(VocabAgent, 
+        blank=True, null=True,
+        verbose_name=_('primary accountable'), related_name="accountable_for_resources")
+    contained_in = models.ForeignKey("self",
+        blank=True, null=True,
+        verbose_name=_('contained in'), related_name="contains")
+    note = models.TextField(_('note'), blank=True, null=True)
+    
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='vocab_resources_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='vocab_resources_changed' )
+
+    
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+        
+    def label(self):
+        return self.name
+    
+    def class_name(self):
+        return "Resource"
+        
+    def where_from(self):
+        return self.events.filter(action__resource_effect="increment")
+        
+    def where_to(self):
+        return self.events.exclude(action__resource_effect="increment")
+        
+    def next(self):
+        return self.where_to()
+        
+    def preds(self):
+        return self.where_from()
+        
+    def process_resource_next(self):
+        #return [evt.process for evt in self.where_to() if evt.process]
+        return [evt.input_of for evt in self.where_to() if evt.input_of]
+    
+    def process_resource_preds(self):
+        #return [evt.process for evt in self.where_from() if evt.process]
+        return [evt.output_of for evt in self.where_from() if evt.output_of]
+        
+    def incoming_flows(self, visited):
+        #import pdb; pdb.set_trace() 
+        flows = []
+        visited.add(self)
+        depth = 0
+        self.depth = depth
+        flows.append(self)
+        self.incoming_flows_dfs(flows, visited, depth)
+        return flows
+        
+    def incoming_flows_dfs(self, flows, visited, depth):
+        for event in self.where_from():
+            if event not in visited:
+                event.depth = self.depth + 1
+                visited.add(event)
+                flows.append(event)
+                process = event.process()
+                if process:
+                    if process not in visited:
+                        process.depth = event.depth + 1
+                        visited.add(process)
+                        flows.append(process)
+                        #import pdb; pdb.set_trace() 
+                        for inp in process.input_events():
+                            if inp not in visited:
+                                inp.depth = process.depth + 1
+                                visited.add(inp)
+                                flows.append(inp)
+                                resource = inp.resource_inventoried_as
+                                if resource:
+                                    if resource not in visited:
+                                        resource.depth = inp.depth + 1
+                                        visited.add(resource)
+                                        flows.append(resource)
+                                        resource.incoming_flows_dfs(flows, visited, depth)
+                                
+    def topological_sorted_inflows(self):
+        from toposort import toposort_flatten
+        visited = set()
+        flows = self.incoming_flows(visited)
+        data = {}
+        for f in flows:
+            if f.preds():
+                data[f] = set(f.preds())
+            else:
+                data[f] = set()
+        return toposort_flatten(data)
+
+        
+RESOURCE_EFFECT_OPTIONS = (
+    ('increment', _('Increment')),
+    ('decrement', _('Decrement')),
+    ('decr_incr', _('Decrement Increment')),
+    ('no_effect', _('No Effect')),
+)
+
+INPUT_OUTPUT_OPTIONS = (
+    ('input', _('Input')),
+    ('output', _('Output')),
+    ('not_applicable', _('N/A')),
+)
+
+@python_2_unicode_compatible
+class VocabAction(VocabBase):
+    """
+    vf:Action:
+    https://valueflows.gitbooks.io/valueflows/content/specification/generated-spec.html#d4e688
+    """
+    label = models.CharField(_('label'), max_length=255, blank=True, null=True)
+    note = models.TextField(_('note'), blank=True, null=True)
+    resource_effect = models.CharField(_('resource effect'),
+        blank=True, null=True,
+        max_length=16, choices=RESOURCE_EFFECT_OPTIONS)
+    onhand_effect = models.CharField(_('onhand effect'),
+        blank=True, null=True,
+        max_length=16, choices=RESOURCE_EFFECT_OPTIONS)
+    input_output = models.CharField(_('input output'),
+        blank=True, null=True,
+        max_length=16, choices=INPUT_OUTPUT_OPTIONS)
+    pairs_with = models.ForeignKey("self",
+        blank=True, null=True,
+        verbose_name=_('pairs with'), related_name="action_paired_with")
+    
+    class Meta:
+        ordering = ('label',)
+
+    def __str__(self):
+        return self.label       
+
+# TODO do we need this, and if so find the OM2 equivalent
+#@python_2_unicode_compatible
+#class QuantityKind(VocabBase):
+#    """
+#    qudt:QuantityKind:
+#    http://www.qudt.org/pages/QUDToverviewPage.html
+#    http://qudt.org/doc/2017/DOC_SCHEMA-QUDT-v2.0.html#Classes  
+#    """
+#    name = models.CharField(_('name'), max_length=255)
+    
+#    class Meta:
+#        ordering = ('name',)
+        
+#    def __str__(self):
+#        return self.name 
+
+    
+@python_2_unicode_compatible
+class VocabEconomicEvent(VocabBase):
+    """
+    vf:EconomicEvent:
+    https://valueflows.gitbooks.io/valueflows/content/specification/generated-spec.html#d4e747
+    """
+    action = models.ForeignKey(VocabAction,
+        verbose_name=_('action'), related_name="events")
+    provider = models.ForeignKey(VocabAgent,
+        verbose_name=_('provider'), related_name="provided_events")
+    receiver = models.ForeignKey(VocabAgent,
+        verbose_name=_('receiver'), related_name="received_events")
+    resource_conforms_to = models.ForeignKey(VocabResourceSpecification,
+        blank=True, null=True,
+        verbose_name=_('conforms to'), related_name='economic_events' )
+    resource_inventoried_as = models.ForeignKey(VocabEconomicResource, # TODO was resource
+        blank=True, null=True,
+        verbose_name=_('resource inventoried as'), related_name='events')
+    resource_classified_as = models.TextField(_('resource classified as'), blank=True, null=True)
+    to_resource_inventoried_as = models.ForeignKey(VocabEconomicResource,
+        blank=True, null=True,
+        verbose_name=_('to resource inventoried as'), related_name='events_to')
+    input_of = models.ForeignKey(VocabProcess, # TODO was process
+        blank=True, null=True,
+        verbose_name=_('input of'), related_name='inputs_of',
+        on_delete=models.SET_NULL)
+    output_of = models.ForeignKey(VocabProcess, # TODO was process
+        blank=True, null=True,
+        verbose_name=_('output of'), related_name='outputs_of',
+        on_delete=models.SET_NULL)
+    url = models.URLField(_('url'), blank=True)
+    note = models.TextField(_('note'), blank=True, null=True)
+    resource_quantity = models.ForeignKey(VocabMeasure, # TODO was quantity_value
+        verbose_name=_('resource quantity'),
+        blank=True, null=True,
+        related_name="events_resource")
+    effort_quantity = models.ForeignKey(VocabMeasure, # TODO was quantity_value
+        verbose_name=_('effort quantity'),
+        blank=True, null=True,
+        related_name="events_effort")
+    has_point_in_time = models.DateTimeField(_('has point in time'), blank=True, null=True) # TODO was date_and_time
+    has_beginning = models.DateTimeField(_('beginning'), blank=True, null=True) # TODO was date_and_time
+    has_end = models.DateTimeField(_('end'), blank=True, null=True) # TODO was date_and_time
+    image = models.URLField(_('image'), blank=True, null=True)
+    in_scope_of = models.ForeignKey(VocabAgent,
+        blank=True, null=True,
+        verbose_name=_('scope'), related_name="events")
+    #realization_of = models.ForeignKey(Agreement,
+    #    blank=True, null=True,
+    #    verbose_name=_('realization of'), related_name="events")
+    # agreed_in = TODO
+    # at location = TODO
+    
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='vocab_events_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='vocab_events_changed' )
+
+    
+    class Meta:
+        ordering = ('-has_point_in_time',) # TODO make work for all time fields
+
+    def __str__(self):
+        resource_string = ""
+        if self.resource_inventoried_as:
+            resource_string = self.resource_inventoried_as.__str__()
+        return ' '.join([
+            self.action.label,
+            #self.has_point_in_time.strftime('%Y-%m-%d'), # TODO see above
+            'provider',
+            self.provider.name,
+            'receiver',
+            self.receiver.name,
+            self.quantity().__str__(),
+            resource_string,
+        ])
+    
+    def label(self):
+        if self.resource_inventoried_as:
+            return ' '.join([
+                self.action.label,
+                self.resource_inventoried_as.__str__(),
+            ])
+        else:
+            return ' '.join([
+                self.provider.name,
+                self.action.label,
+            ])
+            
+    def class_name(self):
+        return "EconomicEvent"
+ 
+    def process(self):
+        if self.input_of:
+            return self.input_of
+        else:
+            if self.output_of:
+                return self.output_of
+            else:
+                return null
+
+    def quantity(self):
+        if self.effort_quantity:
+            return self.effort_quantity
+        else:
+            if self.resource_quantity:
+                return self.resource_quantity
+            else:
+                return ""
+
+    def preds(self):
+        if self.action.resource_effect == "increment":
+            return [self.process(),]
+        else:
+            if self.resource_inventoried_as:
+                return [self.resource_inventoried_as,]
+            else:
+                return []
+        
+    def next(self):
+        if self.action.resource_effect == "increment":
+            if self.resource_inventoried_as:
+                return [self.resource_inventoried_as,]
+            else:
+                return []
+        else:
+            return [self.process(),]
+
+@python_2_unicode_compatible
+class VocabCommitment(VocabBase):
+
+    action = models.ForeignKey(VocabAction,
+        verbose_name=_('action'), related_name="commitments")
+    provider = models.ForeignKey(VocabAgent,
+        verbose_name=_('provider'), related_name="provided_commitments")
+    receiver = models.ForeignKey(VocabAgent,
+        verbose_name=_('receiver'), related_name="received_commitments")
+    resource_conforms_to = models.ForeignKey(VocabResourceSpecification,
+        blank=True, null=True,
+        verbose_name=_('conforms to'), related_name='commitments' )
+    resource_inventoried_as = models.ForeignKey(VocabEconomicResource, # TODO was resource
+        blank=True, null=True,
+        verbose_name=_('resource inventoried as'), related_name='commitments')
+    resource_classified_as = models.TextField(_('resource classified as'), blank=True, null=True)
+    input_of = models.ForeignKey(VocabProcess, # TODO was process
+        blank=True, null=True,
+        verbose_name=_('planned input of'), related_name='planned_inputs_of',
+        on_delete=models.SET_NULL)
+    output_of = models.ForeignKey(VocabProcess, # TODO was process
+        blank=True, null=True,
+        verbose_name=_('planned output of'), related_name='planned_outputs_of',
+        on_delete=models.SET_NULL)
+    url = models.URLField(_('url'), blank=True)
+    note = models.TextField(_('note'), blank=True, null=True)
+    resource_quantity = models.ForeignKey(VocabMeasure, # TODO was quantity_value
+        verbose_name=_('resource quantity'),
+        blank=True, null=True,
+        related_name="commitments_resource")
+    effort_quantity = models.ForeignKey(VocabMeasure, # TODO was quantity_value
+        verbose_name=_('effort quantity'),
+        blank=True, null=True,
+        related_name="commitments_effort")
+    has_point_in_time = models.DateTimeField(_('has point in time'), blank=True, null=True) # TODO was date_and_time
+    has_beginning = models.DateTimeField(_('beginning'), blank=True, null=True) # TODO was date_and_time
+    has_end = models.DateTimeField(_('end'), blank=True, null=True) # TODO was date_and_time
+    image = models.URLField(_('image'), blank=True, null=True)
+    in_scope_of = models.ForeignKey(VocabAgent,
+        blank=True, null=True,
+        verbose_name=_('scope'), related_name="commitments")
+    #realization_of = models.ForeignKey(VocabAgreement,
+    #    blank=True, null=True,
+    #    verbose_name=_('realization of'), related_name="events")
+    # agreed_in = TODO
+    # at location = TODO
+    #fulfilledBy: [Fulfillment!] = TODO
+    #deletable = models.BooleanField(_('deletable'), default=False)
+    
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='vocab_commitments_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='vocab_commitments_changed' )
+
+    
+    class Meta:
+        ordering = ('-has_point_in_time',) # TODO make work for all time fields
+
+    def __str__(self):
+        resource_string = ""
+        if self.resource_inventoried_as:
+            resource_string = self.resource_inventoried_as.__str__()
+        return ' '.join([
+            self.action.label,
+            #self.has_point_in_time.strftime('%Y-%m-%d'), # TODO see above
+            'provider',
+            self.provider.name,
+            'receiver',
+            self.receiver.name,
+            self.quantity().__str__(),
+            resource_string,
+        ])
+    
+    def label(self):
+        if self.resource_inventoried_as:
+            return ' '.join([
+                self.action.label,
+                self.resource_inventoried_as.__str__(),
+            ])
+        else:
+            return ' '.join([
+                self.provider.name,
+                self.action.label,
+            ])
+            
+    def class_name(self):
+        return "Commitment"
+ 
+    def process(self):
+        if self.input_of:
+            return self.input_of
+        else:
+            if self.output_of:
+                return self.output_of
+            else:
+                return null
+
+    def quantity(self):
+        if self.effort_quantity:
+            return self.effort_quantity
+        else:
+            if self.resource_quantity:
+                return self.resource_quantity
+            else:
+                return ""
+
+    def preds(self):
+        if self.action.resource_effect == "increment":
+            return [self.process(),]
+        else:
+            if self.resource_inventoried_as:
+                return [self.resource_inventoried_as,]
+            else:
+                return []
+        
+    def next(self):
+        if self.action.resource_effect == "increment":
+            if self.resource_inventoried_as:
+                return [self.resource_inventoried_as,]
+            else:
+                return []
+        else:
+            return [self.process(),]
+             
+    
+@python_2_unicode_compatible
+class VocabFulfillment(VocabBase):
+    """
+    vf:Fulfillment:
+    """
+    fulfills = models.ForeignKey(VocabCommitment,
+        verbose_name=_('fulfills'), related_name="fulfilled_by")
+    fulfilled_by = models.ForeignKey(VocabEconomicEvent,
+        verbose_name=_('fulfilled by'), related_name="fulfills")
+    resource_quantity = models.ForeignKey(VocabMeasure,
+        verbose_name=_('resource quantity'),
+        blank=True, null=True,
+        related_name="fulfillments_resource")
+    effort_quantity = models.ForeignKey(VocabMeasure,
+        verbose_name=_('effort quantity'),
+        blank=True, null=True,
+        related_name="fulfillments_effort")
+    note = models.TextField(_('note'), blank=True, null=True)    
+
+    created_by = models.ForeignKey(User,
+        blank=True, null=True,
+        verbose_name=_('created by'), related_name='fulfillments_created' )
+    changed_by = models.ForeignKey(User,
+        blank=True, null=True, 
+        verbose_name=_('changed by'), related_name='fulfillments_changed' )
+        
+    #class Meta:
+    #    ordering = ('self.fulfilled_by.has_point_in_time',) #TODO get the times consolidated
+            
+    def class_name(self):
+        return "Fulfillment"
+
+    def __str__(self):
+        return ' '.join([
+            self.fulfilled_by.__str__(),
+            "fulfills",
+            self.quantity().__str__(),
+            "for",
+            self.fulfills.__str__()
+        ])
+   
+    def quantity(self):
+        if self.effort_quantity:
+            return self.effort_quantity
+        else:
+            if self.resource_quantity:
+                return self.resource_quantity
+            else:
+                return ""
+    
+        
+
 
    
    

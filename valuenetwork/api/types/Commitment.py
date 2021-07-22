@@ -1,7 +1,7 @@
 #
 # Commitment: A planned economic event or transfer that has been promised by an agent to another agent.
 #
-"""
+
 import jwt
 import graphene
 from django.conf import settings
@@ -12,24 +12,24 @@ from django.core.exceptions import PermissionDenied
 from graphene_django.types import DjangoObjectType
 
 import valuenetwork.api.types as types
-from valuenetwork.api.types.Measure import Unit, Measure
+#from valuenetwork.api.types.Measure import Unit, Measure
 from valuenetwork.api.schemas.Auth import _authUser
-from valuenetwork.valueaccounting.models import Commitment as CommitmentProxy, Measure as MeasureProxy #, AgentUser
-from valuenetwork.api.models import formatAgent, Person, Organization #, Fulfillment as FulfillmentProxy
+from valuenetwork.valueaccounting.models import VocabCommitment, VocabMeasure, VocabAgentUser
+from valuenetwork.api.models import formatAgent, Person, Organization
 
 
 class Commitment(DjangoObjectType):
     action = graphene.String(source='action')
-    #input_of = graphene.Field(lambda: types.Process)
-    #output_of = graphene.Field(lambda: types.Process)
-    #provider = graphene.Field(lambda: types.Agent)
-    #receiver = graphene.Field(lambda: types.Agent)
-    #in_scope_of = graphene.Field(lambda: types.Agent)
-    #resource_conforms_to = graphene.Field(lambda: types.ResourceSpecification)
+    input_of = graphene.Field(lambda: types.Process)
+    output_of = graphene.Field(lambda: types.Process)
+    provider = graphene.Field(lambda: types.Agent)
+    receiver = graphene.Field(lambda: types.Agent)
+    in_scope_of = graphene.Field(lambda: types.Agent)
+    resource_conforms_to = graphene.Field(lambda: types.ResourceSpecification)
     resource_classified_as = graphene.String(source='resource_classified_as')
-    #resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
-    #resource_quantity = graphene.Field(lambda: types.Measure)
-    #effort_quantity = graphene.Field(lambda: types.Measure)
+    resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
+    resource_quantity = graphene.Field(lambda: types.Measure)
+    effort_quantity = graphene.Field(lambda: types.Measure)
     created = graphene.String(source='created')
     has_beginning = graphene.String(source='has_beginning')
     has_end = graphene.String(source='has_end')

@@ -15,12 +15,33 @@ admin.site.register(Location)
 admin.site.register(UseCaseEventType)
 admin.site.register(HomePageLayout)
 
-admin.site.register(VocabAgent)
 admin.site.register(VocabAgentRelationshipRole)
 admin.site.register(VocabAgentRelationship)
 admin.site.register(VocabPlan)
 admin.site.register(VocabProcess)
+admin.site.register(VocabResourceSpecification)
+admin.site.register(VocabEconomicResource)
+admin.site.register(VocabAction)
+admin.site.register(VocabCommitment)
+admin.site.register(VocabEconomicEvent)
+admin.site.register(VocabFulfillment)
 
+
+
+class VocabAgentUserInline(admin.TabularInline):
+    model = VocabAgentUser
+
+class VocabAgentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'agent_subclass', 'url')
+    list_filter = ['agent_subclass',]
+    search_fields = ['name']
+    inlines = [ VocabAgentUserInline, ]
+
+admin.site.register(VocabAgent, VocabAgentAdmin)
+
+
+
+##########################################################################
 
 class HelpAdmin(admin.ModelAdmin):
     list_display = ('page',)

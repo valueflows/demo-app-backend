@@ -2,30 +2,16 @@
 # Economic Event: An inflow or outflow of an economic resource in relation to a process and/or exchange. This could reflect a change in the quantity of a EconomicResource. It is also defined by its behavior in relation to the EconomicResource and a Process (consume, use, produce, etc.)" .
 #
 
-#from django.core.exceptions import PermissionDenied
-"""
+from django.core.exceptions import PermissionDenied
+
 import graphene
 from graphene_django.types import DjangoObjectType
-import api.types as types
-#from valuenetwork.api.schemas.Auth import _authUser
-#from api.types.Measure import Unit, Measure
-from vocab.models import EconomicEvent as EconomicEventProxy, EconomicResource as EconomicResourceProxy, Measure as MeasureProxy, Action as ActionProxy #, AgentUser
-from api.models import formatAgent, Person, Organization
-from vocab.models import Fulfillment as FulfillmentProxy
+import valuenetwork.api.types as types
+from valuenetwork.api.schemas.Auth import _authUser
+from api.types.Measure import Unit, Measure
+from valuenetwork.valueaccounting.models import VocabEconomicEvent, VocabEconomicResource, VocabMeasure, VocabAction, VocabAgentUser, VocabFulfillment
+from valuenetwork.api.models import formatAgent, Person, Organization
 
-
-class Action(graphene.Enum):
-    NONE = None
-    WORK = "work"
-    CONSUME = "consume"
-    USE = "use"
-    CITE = "cite"
-    PRODUCE = "produce"
-    ACCEPT = "accept"
-    IMPROVE = "improve"
-    #GIVE = "give"
-    #TAKE = "take"
-    ADJUST = "adjust"
 
 class Action(DjangoObjectType):
     label = graphene.String(source='label')
@@ -36,7 +22,7 @@ class Action(DjangoObjectType):
     pairs_with = graphene.String(source='pairs_with')
     
     class Meta:
-        model = ActionProxy
+        model = VocabAction
         only_fields = ('id')    
 
 
@@ -44,11 +30,11 @@ class EconomicEvent(DjangoObjectType):
     action = graphene.Field(Action)
     input_of = graphene.Field(lambda: types.Process)
     output_of = graphene.Field(lambda: types.Process)
-    #provider = graphene.Field(lambda: types.Agent)
-    #receiver = graphene.Field(lambda: types.Agent)
-    #in_scope_of = graphene.Field(lambda: types.Agent)
-    #resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
-    #to_resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
+    provider = graphene.Field(lambda: types.Agent)
+    receiver = graphene.Field(lambda: types.Agent)
+    in_scope_of = graphene.Field(lambda: types.Agent)
+    resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
+    to_resource_inventoried_as = graphene.Field(lambda: types.EconomicResource)
     resource_quantity = graphene.Field(lambda: types.Measure)
     effort_quantity = graphene.Field(lambda: types.Measure)
     has_point_in_time = graphene.String(source='has_point_in_time')
@@ -59,7 +45,7 @@ class EconomicEvent(DjangoObjectType):
     note = graphene.String(source='note')
 
     class Meta:
-        model = EconomicEventProxy
+        model = VocabEconomicEvent
         only_fields = ('id')
 
     #fulfills = graphene.List(lambda: types.Fulfillment)
@@ -125,22 +111,22 @@ class EconomicEvent(DjangoObjectType):
     #def resolve_is_validated(self, args, *rargs):
     #    return self.is_double_validated()
 
-    def resolve_user_is_authorized_to_update(self, args, context, *rargs):
-        token = rargs[0].variable_values['token']
-        context.user = _authUser(token)
-        user_agent = AgentUser.objects.get(user=context.user).agent
-        return user_agent.is_authorized(object_to_mutate=self)
+    #def resolve_user_is_authorized_to_update(self, args, context, *rargs):
+    #    token = rargs[0].variable_values['token']
+    #    context.user = _authUser(token)
+    #    user_agent = AgentUser.objects.get(user=context.user).agent
+    #    return user_agent.is_authorized(object_to_mutate=self)
 
-    def resolve_user_is_authorized_to_delete(self, args, context, *rargs):
-        token = rargs[0].variable_values['token']
-        context.user = _authUser(token)
-        user_agent = AgentUser.objects.get(user=context.user).agent
-        return user_agent.is_authorized(object_to_mutate=self)
+    #def resolve_user_is_authorized_to_delete(self, args, context, *rargs):
+    #    token = rargs[0].variable_values['token']
+    #    context.user = _authUser(token)
+    #    user_agent = AgentUser.objects.get(user=context.user).agent
+    #    return user_agent.is_authorized(object_to_mutate=self)
 
 
 class Fulfillment(DjangoObjectType):
 
     class Meta:
-        model = FulfillmentProxy
+        model = VocabFulfillment
         only_fields = ('id', 'fulfilled_by', 'fulfills', 'resource_quantity', 'effort_quantity', 'note')
-"""
+

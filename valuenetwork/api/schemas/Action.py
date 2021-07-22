@@ -1,12 +1,12 @@
 #
 # Graphene schema for exposing Action model
 #   
-"""
+
 import graphene
 from graphene_django.types import DjangoObjectType
 
 from valuenetwork.valueaccounting.models import VocabAction
-from api.types.EconomicEvent import Action
+from valuenetwork.api.types.EconomicEvent import Action
 
 
 class Query(graphene.AbstractType):
@@ -23,11 +23,11 @@ class Query(graphene.AbstractType):
     def resolve_action(self, args, *rargs):
         id = args.get('id')
         if id is not None:
-            action = ActionProxy.objects.get(pk=id)
+            action = VocabAction.objects.get(pk=id)
             if action:
                 return action
         return None
 
     def resolve_actions(self, args, context, info):
-        return ActionProxy.objects.all()
-"""
+        return VocabAction.objects.all()
+

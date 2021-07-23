@@ -4,16 +4,16 @@ from valuenetwork.valueaccounting.actions import export_as_csv
 
 admin.site.add_action(export_as_csv, 'export_selected objects')
 
-admin.site.register(Unit)
-admin.site.register(AgentType)
+#admin.site.register(Unit)
+#admin.site.register(AgentType)
 #admin.site.register(CachedEventSummary)
-admin.site.register(UseCase)
-admin.site.register(AccountingReference)
-admin.site.register(AgentResourceRoleType)
-admin.site.register(AgentResourceRole)
-admin.site.register(Location)
-admin.site.register(UseCaseEventType)
-admin.site.register(HomePageLayout)
+#admin.site.register(UseCase)
+#admin.site.register(AccountingReference)
+#admin.site.register(AgentResourceRoleType)
+#admin.site.register(AgentResourceRole)
+#admin.site.register(Location)
+#admin.site.register(UseCaseEventType)
+#admin.site.register(HomePageLayout)
 
 admin.site.register(VocabAgentRelationshipRole)
 admin.site.register(VocabAgentRelationship)
@@ -45,6 +45,7 @@ admin.site.register(VocabAgent, VocabAgentAdmin)
 
 ########################################################################## OLD
 
+"""
 class HelpAdmin(admin.ModelAdmin):
     list_display = ('page',)
 
@@ -351,7 +352,7 @@ class EconomicEventAdmin(admin.ModelAdmin):
     inlines = [ ClaimEvent2Inline, ]
 
 admin.site.register(EconomicEvent, EconomicEventAdmin)
-
+"""
 
 #class CompensationAdmin(admin.ModelAdmin):
 #    list_display = ('initiating_event', 'compensating_event', 'compensation_date', 'compensating_value')

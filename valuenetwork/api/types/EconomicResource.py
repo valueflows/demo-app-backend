@@ -49,7 +49,7 @@ class FacetValue(DjangoObjectType):
 class ResourceSpecification(DjangoObjectType):
     image = graphene.String(source='image')
     note = graphene.String(source='note')
-    resourceClassifiedAs = graphene.String(source='resource_classified_as')
+    resource_classified_as = graphene.String(source='resource_classified_as')
     #process_category = graphene.String(source='process_category')
     default_unit_of_resource = graphene.Field(Unit)
     default_unit_of_effort = graphene.Field(Unit)
@@ -58,6 +58,13 @@ class ResourceSpecification(DjangoObjectType):
         model = VocabResourceSpecification
         only_fields = ('id', 'name', 'unit')
 
+
+    def resolve_default_unit_of_resource(self, args, *rargs):
+        return self.default_unit_of_resource
+    
+    def resolve_default_unit_of_effort(self, args, *rargs):
+        return self.default_unit_of_effort
+        
     #classification_resources = graphene.List(lambda: EconomicResource)
 
     #classification_facet_values = graphene.List(lambda: FacetValue)

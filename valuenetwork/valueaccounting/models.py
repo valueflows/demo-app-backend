@@ -243,7 +243,7 @@ class VocabProcess(VocabBase):
     classified_as = models.TextField(_('classified as'), blank=True, null=True)
     plan = models.ForeignKey(VocabPlan,
         blank=True, null=True,
-        verbose_name=_('plan'), related_name="processes")
+        verbose_name=_('plan'), related_name="processes") #TODO should be nested_in, not plan
     in_scope_of = models.ForeignKey(VocabAgent,
         blank=True, null=True,
         verbose_name=_('scope'), related_name="processes")
@@ -352,13 +352,13 @@ class VocabProcess(VocabBase):
 class VocabResourceSpecification(VocabBase):
     name = models.CharField(_('name'), max_length=255)
     image = models.URLField(_('image'), blank=True)
-    resourceClassifiedAs = models.URLField(_('classified as'), blank=True)
+    resource_classified_as = models.URLField(_('classified as'), blank=True)
     note = models.TextField(_('note'), blank=True, null=True)
-    defaultUnitOfResource = models.ForeignKey(VocabUnit, 
+    default_unit_of_resource = models.ForeignKey(VocabUnit, 
         verbose_name=_('default unit of resource'),
         blank=True, null=True, 
         related_name="resource_specifications_resource")
-    defaultUnitOfEffort = models.ForeignKey(VocabUnit, 
+    default_unit_of_effort = models.ForeignKey(VocabUnit, 
         blank=True, null=True, 
         verbose_name=_('default unit of effort'), 
         related_name="resource_specifications_effort")

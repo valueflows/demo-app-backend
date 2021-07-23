@@ -297,6 +297,132 @@ query($token: String) {
   }
 }
 
+query ($token: String) {
+  viewer(token: $token) {
+    plan(id: 2) {
+      id
+      name
+      due
+      note
+      processes {
+        id
+        name
+        note
+        finished
+        inScopeOf {
+          id
+          name
+        }
+        committedInputs {
+          action {
+            label
+          }
+          provider {
+            name
+          }
+          receiver {
+            name
+          }
+          resourceConformsTo {
+            name
+          }
+          resourceQuantity {
+            hasNumericalValue
+            hasUnit {
+              label
+            }
+          }
+          effortQuantity {
+            hasNumericalValue
+            hasUnit {
+              label
+            }
+          }
+          due
+          finished
+          note
+        }
+        committedOutputs {
+          action {
+            label
+          }
+          provider {
+            name
+          }
+          receiver {
+            name
+          }
+          resourceConformsTo {
+            name
+          }
+          resourceQuantity {
+            hasNumericalValue
+            hasUnit {
+              label
+            }
+          }
+          effortQuantity {
+            hasNumericalValue
+            hasUnit {
+              label
+            }
+          }
+          due
+          finished
+          note
+        }
+      }
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    commitments {
+      action {
+        label
+      }
+      inputOf {
+        name
+      }
+      outputOf {
+        name
+      }
+      provider {
+        name
+      }
+      receiver {
+        name
+      }
+      inScopeOf {
+        name
+      }
+      resourceConformsTo {
+        name
+      }
+      resourceClassifiedAs
+      resourceInventoriedAs {
+        name
+      }
+      resourceQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      effortQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      due
+      finished
+      note
+    }
+  }
+}
+
 
 ###################################################################
 ##################################################################3
@@ -1456,12 +1582,10 @@ query ($token: String) {
         inputOf {
           id
           name
-<<<<<<< HEAD
-=======
+
           processPlan {
             id
           }
->>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
         }
         validations {
           id
@@ -2943,11 +3067,8 @@ mutation ($token: String!) {
 }
 
 mutation ($token: String!) {
-<<<<<<< HEAD
-  createValidation(token: $token, validatedById: 6, economicEventId: 392) {
-=======
   createValidation(token: $token, validatedById: 6, economicEventId: 393, note: "test") {
->>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
+
     validation {
       id
       validatedBy {
@@ -2963,10 +3084,8 @@ mutation ($token: String!) {
         }
       }
       validationDate
-<<<<<<< HEAD
-=======
       note
->>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
+
     }
   }
 }
@@ -3018,7 +3137,6 @@ mutation ($token: String!) {
 }
 
 mutation ($token: String!) {
-<<<<<<< HEAD
   createPlace(token: $token, name:"testloc2", note:"test", address:"123 some street", latitude: 54.333, longitude: 45.333) {
     place {
       id
@@ -3032,8 +3150,7 @@ mutation ($token: String!) {
 }
 
 mutation ($token: String!) {
-=======
->>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
+
   createAgentResourceClassification(token: $token, agentId: 6, resourceClassificationId: 60) {
     agentResourceClassification {
       id
@@ -3062,7 +3179,6 @@ mutation ($token: String!) {
   }
 }
 
-<<<<<<< HEAD
 mutation ($token: String!) {
   createResourceClassification(token: $token, note: "test create", name:"testrc", 
     image:"http://image.example", category: "inventory", unit:"Each") {
@@ -3090,6 +3206,4 @@ mutation ($token: String!) {
   }
 }
 
-=======
->>>>>>> a139cbfad931e5b4bd274df6524ccca95b6a3387
 '''

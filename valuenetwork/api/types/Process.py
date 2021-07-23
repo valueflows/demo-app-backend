@@ -5,7 +5,8 @@
 import graphene
 from graphene_django.types import DjangoObjectType
 import valuenetwork.api.types as types
-from valuenetwork.valueaccounting.models import VocabProcess, VocabPlan, VocabAgent #, Action, ProcessType, AgentUser
+from valuenetwork.api.types.Commitment import Commitment
+from valuenetwork.valueaccounting.models import VocabProcess, VocabPlan, VocabAgent, VocabAction, VocabAgentUser, VocabCommitment, VocabEconomicEvent #, ProcessType
 from valuenetwork.api.models import formatAgent
 
 """
@@ -32,17 +33,19 @@ class Process(DjangoObjectType):
         model = VocabProcess
         only_fields = ('id', 'name')
 
-
     def resolve_in_scope_of(self, args, *rargs):
         return formatAgent(self.in_scope_of)
 
     def resolve_nested_in(self, args, *rargs):
         #import pdb; pdb.set_trace()
         return self.plan
-    
-    #planned_duration = graphene.String(source='planned_duration')
 
-    #is_deletable = graphene.Boolean()
+    committed_inputs = graphene.List(lambda: Commitment) #,
+    #                                 action=Action())
+
+    committed_outputs = graphene.List(lambda: Commitment) #,
+    #                                  action=Action())
+
 
     #inputs = lambda: graphene.List(EconomicEvent)
     #                                    action=Action())
@@ -53,11 +56,6 @@ class Process(DjangoObjectType):
     #unplanned_economic_events = graphene.List(lambda: types.EconomicEvent,
     #                                          action=Action())
 
-    #committed_inputs = lambda: graphene.List(Commitment) #,
-    #                                 action=Action())
-
-    #committed_outputs = lambda: graphene.List(Commitment) #,
-    #                                  action=Action())
 
     #next_processes = graphene.List(lambda: types.Process)
 
@@ -65,7 +63,8 @@ class Process(DjangoObjectType):
 
     #working_agents = graphene.List(lambda: types.Agent)
 
-
+    #is_deletable = graphene.Boolean()
+    
     #user_is_authorized_to_update = graphene.Boolean()
 
     #user_is_authorized_to_delete = graphene.Boolean()
@@ -76,32 +75,8 @@ class Process(DjangoObjectType):
 
     #resource_classifications_by_action = graphene.List(lambda: types.ResourceClassification)
 
-    """
-    def resolve_in_scope_of(self, args, *rargs):
-        return formatAgent(self.in_scope_of)
-
-    def resolve_nested_in(self, args, *rargs):
-        import pdb; pdb.set_trace()
-        return self.plan
-
     #def resolve_process_classified_as(self, args, *rargs):
     #    return self.process_type
-
-    def resolve_inputs(self, args, context, info):
-        #action = args.get('action')
-        events = self.inputs.all()
-        #if action:
-        #    #event_type = EventType.objects.convert_action_to_event_type(action)
-        #    events = events.filter(action=action)
-        return events
-
-    def resolve_outputs(self, args, context, info):
-        #action = args.get('action')
-        events = self.outputs.all()
-        #if action:
-        #    #event_type = EventType.objects.convert_action_to_event_type(action)
-        #    events = events.filter(action=action)
-        return events
 
     def resolve_committed_inputs(self, args, context, info):
         #action = args.get('action')
@@ -118,7 +93,24 @@ class Process(DjangoObjectType):
         #    event_type = EventType.objects.convert_action_to_event_type(action)
         #    commits = commits.filter(event_type=event_type)
         return commits
+        
+    def resolve_inputs(self, args, context, info):
+        #action = args.get('action')
+        events = self.inputs_of.all()
+        #if action:
+        #    #event_type = EventType.objects.convert_action_to_event_type(action)
+        #    events = events.filter(action=action)
+        return events
 
+    def resolve_outputs(self, args, context, info):
+        #action = args.get('action')
+        events = self.outputs_of.all()
+        #if action:
+        #    #event_type = EventType.objects.convert_action_to_event_type(action)
+        #    events = events.filter(action=action)
+        return events
+
+    """
     def resolve_next_processes(self, args, context, info):
         return self.next_processes() #TODO
 

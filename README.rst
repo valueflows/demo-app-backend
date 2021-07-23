@@ -5,6 +5,7 @@ Status
 ---------
 
 In process.  There are working basic queries for all implemented types, including:
+
 - Action, ResourceSpecification, AgentRelationshipRole
 - Plan, Process, Commitment
 - EconomicEvent, Fulfillment, EconomicResource, Agent, AgentRelationship

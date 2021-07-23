@@ -25,6 +25,7 @@ admin.site.register(VocabAction)
 admin.site.register(VocabCommitment)
 admin.site.register(VocabEconomicEvent)
 admin.site.register(VocabFulfillment)
+admin.site.register(VocabUnit)
 
 
 

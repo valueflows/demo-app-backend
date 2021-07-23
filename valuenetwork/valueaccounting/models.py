@@ -355,9 +355,13 @@ class VocabResourceSpecification(VocabBase):
     resourceClassifiedAs = models.URLField(_('classified as'), blank=True)
     note = models.TextField(_('note'), blank=True, null=True)
     defaultUnitOfResource = models.ForeignKey(VocabUnit, 
-        verbose_name=_('default unit of resource'), related_name="resource_specifications_resource")
+        verbose_name=_('default unit of resource'),
+        blank=True, null=True, 
+        related_name="resource_specifications_resource")
     defaultUnitOfEffort = models.ForeignKey(VocabUnit, 
-        verbose_name=_('default unit of effort'), related_name="resource_specifications_effort")
+        blank=True, null=True, 
+        verbose_name=_('default unit of effort'), 
+        related_name="resource_specifications_effort")
     
     created_by = models.ForeignKey(User,
         blank=True, null=True,

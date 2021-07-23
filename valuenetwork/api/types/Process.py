@@ -25,13 +25,21 @@ class Process(DjangoObjectType):
     has_beginning = graphene.String(source='has_beginning')
     has_end = graphene.String(source='has_end')
     finished = graphene.Boolean(source='finished')
-    #classified_as = graphene.Field(ProcessClassification) #TODO
+    #conforms_to = graphene.Field(ProcessSpecification) #TODO
     note = graphene.String(source='note')
 
     class Meta:
         model = VocabProcess
         only_fields = ('id', 'name')
 
+
+    def resolve_in_scope_of(self, args, *rargs):
+        return formatAgent(self.in_scope_of)
+
+    def resolve_nested_in(self, args, *rargs):
+        #import pdb; pdb.set_trace()
+        return self.plan
+    
     #planned_duration = graphene.String(source='planned_duration')
 
     #is_deletable = graphene.Boolean()
@@ -57,7 +65,6 @@ class Process(DjangoObjectType):
 
     #working_agents = graphene.List(lambda: types.Agent)
 
-    #process_plan = graphene.Field(lambda: types.Plan)
 
     #user_is_authorized_to_update = graphene.Boolean()
 

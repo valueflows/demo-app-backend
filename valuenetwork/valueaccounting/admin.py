@@ -26,6 +26,7 @@ admin.site.register(VocabCommitment)
 admin.site.register(VocabEconomicEvent)
 admin.site.register(VocabFulfillment)
 admin.site.register(VocabUnit)
+admin.site.register(VocabMeasure)
 
 
 
@@ -42,7 +43,7 @@ admin.site.register(VocabAgent, VocabAgentAdmin)
 
 
 
-##########################################################################
+########################################################################## OLD
 
 class HelpAdmin(admin.ModelAdmin):
     list_display = ('page',)

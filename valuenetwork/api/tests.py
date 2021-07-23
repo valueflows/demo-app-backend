@@ -27,7 +27,6 @@ query($token: String) {
       resourceEffect
       onhandEffect
       inputOutput
-      pairsWith
     }
   }
 }
@@ -41,7 +40,6 @@ query($token: String) {
       resourceEffect
       onhandEffect
       inputOutput
-      pairsWith
     }
   }
 }
@@ -214,6 +212,12 @@ query($token: String) {
       hasEnd
       finished
       note
+      nestedIn {
+        name
+      }
+      inScopeOf {
+        name
+      }
     }
   }
 }

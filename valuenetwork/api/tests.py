@@ -297,6 +297,132 @@ query($token: String) {
   }
 }
 
+query ($token: String) {
+  viewer(token: $token) {
+    plan(id: 2) {
+      id
+      name
+      due
+      note
+      processes {
+        id
+        name
+        note
+        finished
+        inScopeOf {
+          id
+          name
+        }
+        committedInputs {
+          action {
+            label
+          }
+          provider {
+            name
+          }
+          receiver {
+            name
+          }
+          resourceConformsTo {
+            name
+          }
+          resourceQuantity {
+            hasNumericalValue
+            hasUnit {
+              label
+            }
+          }
+          effortQuantity {
+            hasNumericalValue
+            hasUnit {
+              label
+            }
+          }
+          due
+          finished
+          note
+        }
+        committedOutputs {
+          action {
+            label
+          }
+          provider {
+            name
+          }
+          receiver {
+            name
+          }
+          resourceConformsTo {
+            name
+          }
+          resourceQuantity {
+            hasNumericalValue
+            hasUnit {
+              label
+            }
+          }
+          effortQuantity {
+            hasNumericalValue
+            hasUnit {
+              label
+            }
+          }
+          due
+          finished
+          note
+        }
+      }
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    commitments {
+      action {
+        label
+      }
+      inputOf {
+        name
+      }
+      outputOf {
+        name
+      }
+      provider {
+        name
+      }
+      receiver {
+        name
+      }
+      inScopeOf {
+        name
+      }
+      resourceConformsTo {
+        name
+      }
+      resourceClassifiedAs
+      resourceInventoriedAs {
+        name
+      }
+      resourceQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      effortQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      due
+      finished
+      note
+    }
+  }
+}
+
 
 ###################################################################
 ##################################################################3

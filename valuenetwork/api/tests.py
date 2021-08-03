@@ -68,6 +68,31 @@ query($token: String) {
   }
 }
 
+mutation ($token: String!) {
+  createOrganization(token: $token, name: "Lynn Test Cooperative" note: "test") {
+    organization {
+      id
+      name
+      note
+      image
+      __typename
+    }
+  }
+}
+
+mutation ($token: String!) {
+  createPerson(token: $token, name: "Alice Person", note:"test", 
+    image: "https://example.com/photos/hello.JPG") {
+    person {
+      id
+      name
+      note
+      image
+      __typename
+    }
+  }
+}
+
 query($token: String) {
   viewer(token: $token) {
     agentRelationshipRoles {
@@ -223,8 +248,7 @@ query($token: String) {
 }
 
 mutation ($token: String!) {
-  createProcess(token: $token, name: "Create big doc", hasBeginning: "2017-10-01", 
-    hasEnd: "2017-10-10", note: "testing", finished: false, planId: ) {
+  createProcess(token: $token, name: "Create Elements doc", hasBeginning: "2021-10-01", hasEnd: "2021-10-10", note: "testing", finished: false, nestedIn: 4, inScopeOf: 1) {
     process {
       id
       name
@@ -232,9 +256,15 @@ mutation ($token: String!) {
       hasEnd
       finished
       note
+      inScopeOf {
+        name
+      }
+      nestedIn {
+        name
       }
     }
   }
+}
   
 query($token: String) {
   viewer(token: $token) {
@@ -292,6 +322,104 @@ query($token: String) {
       id
       name
       due
+      note
+    }
+  }
+}
+
+mutation ($token: String!) {
+  createPlan(token: $token, name: "DisCO Deck", due: "2021-10-15", note: "testing") {
+    plan {
+      id
+      name
+      due
+      note
+    }
+  }
+}
+
+query($token: String) {
+  viewer(token: $token) {
+    commitments {
+      action {
+        label
+      }
+      provider {
+        id
+        name
+      }
+      receiver {
+        id
+        name
+      }
+      resourceConformsTo {
+        id
+        name
+      }
+      resourceQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      effortQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+    }
+  }
+}
+
+mutation ($token: String!) {  
+  createCommitment(token: $token, action: "use",
+    inScopeOf: 1, note: "testing", resourceConformsTo: 1, 
+    hasNumericalValue: "3.5", hasUnit: 2, inputOf: 4, 
+    provider: 1, receiver: 1) {
+    commitment {
+      id
+      action {
+        label
+      }
+      hasBeginning
+      hasEnd
+      hasPointInTime
+      inputOf {
+        name
+      }
+      outputOf {
+        name
+      }
+      provider {
+        name
+      }
+      receiver {
+        name
+      }
+      inScopeOf {
+        name
+      }
+      resourceConformsTo {
+        name
+      }
+      resourceInventoriedAs {
+        name
+      }
+      resourceClassifiedAs
+      resourceQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      effortQuantity {
+        hasNumericalValue
+        hasUnit {
+          label
+        }
+      }
+      finished
       note
     }
   }
